@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -52,16 +53,55 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
-				}
+				// Custom colors
+				"silai": {
+					"50": "#f0f0ff",
+					"100": "#e4e1ff",
+					"200": "#cdc6ff",
+					"300": "#b0a1ff",
+					"400": "#9173ff",
+					"500": "#7c52ff",
+					"600": "#6936f5", // Primary
+					"700": "#5d24e0",
+					"800": "#4d1fc5",
+					"900": "#41219e",
+				},
+				"tangerine": {
+					"50": "#fff6ed",
+					"100": "#ffead5",
+					"200": "#ffd0ab",
+					"300": "#ffb176",
+					"400": "#ff9347",
+					"500": "#ff7940", // Secondary
+					"600": "#f85d27",
+					"700": "#e1371a",
+					"800": "#bf2b19",
+					"900": "#9a271a",
+				},
+				"jade": {
+					"50": "#f0fcf9",
+					"100": "#d0f7ed",
+					"200": "#a5edda",
+					"300": "#6edec5",
+					"400": "#43c9ad",
+					"500": "#0ca678", // Success
+					"600": "#0a8c63",
+					"700": "#0d7152",
+					"800": "#105a43",
+					"900": "#114a38",
+				},
+				"amber": {
+					"50": "#fffbeb",
+					"100": "#fef3c7",
+					"200": "#fde68a",
+					"300": "#fcd34d",
+					"400": "#fbbf24",
+					"500": "#f59e0b",
+					"600": "#d97706",
+					"700": "#b45309",
+					"800": "#92400e",
+					"900": "#78350f",
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

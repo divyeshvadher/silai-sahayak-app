@@ -1,11 +1,12 @@
 
 import { createRoot } from 'react-dom/client';
-import { defineCustomElements } from '@ionic/pwa-elements/loader';
 import App from './App.tsx';
 import './index.css';
 
-// Initialize the app
-createRoot(document.getElementById("root")!).render(<App />);
+// Initialize the app for web
+if (typeof document !== 'undefined') {
+  createRoot(document.getElementById("root")!).render(<App />);
+}
 
-// Call the element loader after the app has been rendered the first time
-defineCustomElements(window);
+// Expo entry point is handled by App.tsx directly
+// No need for additional setup here

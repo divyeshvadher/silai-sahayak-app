@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Platform } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import Index from "./pages/Index";
 import Customers from "./pages/Customers";
 import Orders from "./pages/Orders";
@@ -12,11 +14,10 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
+// Use different routing based on platform
+const AppContent = () => {
+  if (Platform.OS === 'web') {
+    return (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
@@ -26,6 +27,21 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+    );
+  } else {
+    // For mobile, start with the Index page
+    // In a real app, you would implement native navigation here
+    return <Index />;
+  }
+};
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <AppContent />
+      <StatusBar style="auto" />
     </TooltipProvider>
   </QueryClientProvider>
 );

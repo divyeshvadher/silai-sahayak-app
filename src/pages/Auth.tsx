@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -9,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "@/components/ui/sonner";
 import { Phone } from "lucide-react";
 
+// Define schema for validation
 const phoneSchema = z.object({
   phone: z.string().min(10, "Phone number must be at least 10 digits").max(15)
 });
@@ -25,6 +24,8 @@ const Auth = () => {
   const { user, signInWithOtp, verifyOtp } = useAuth();
   const [otpSent, setOtpSent] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [isResending, setIsResending] = useState(false);
+  const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(''));
   const navigate = useNavigate();
 
   // If user is already logged in, redirect to home
@@ -47,17 +48,94 @@ const Auth = () => {
   });
 
   const handleSendOTP = async (values: z.infer<typeof phoneSchema>) => {
-    const { error } = await signInWithOtp(values.phone);
-    if (!error) {
-      setOtpSent(true);
-      setPhoneNumber(values.phone);
+    try {
+      setIsResending(true);
+      const { error } = await signInWithOtp(values.phone);
+      if (!error) {
+        setOtpSent(true);
+        setPhoneNumber(values.phone);
+        setOtpValues(Array(6).fill('')); // Reset OTP values
+        otpForm.setValue("otp", ""); // Reset OTP in the form
+      }
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      toast.error("Failed to send OTP. Please try again.");
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    // Only allow numbers
+    if (value && !/^\d*$/.test(value)) return;
+    
+    // Update the OTP values
+    const newOtpValues = [...otpValues];
+    newOtpValues[index] = value;
+    setOtpValues(newOtpValues);
+    
+    // Update the form value
+    otpForm.setValue("otp", newOtpValues.join(''), { shouldValidate: true });
+    
+    // Auto-focus next input if value is entered
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`otp-input-${index + 1}`);
+      if (nextInput) {
+        nextInput.focus();
+      }
+    }
+    
+    // Auto-submit if all digits are entered
+    if (newOtpValues.every(v => v) && newOtpValues.length === 6) {
+      setTimeout(() => {
+        otpForm.handleSubmit(handleVerifyOTP)();
+      }, 300);
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Handle backspace
+    if (e.key === 'Backspace' && !otpValues[index] && index > 0) {
+      const prevInput = document.getElementById(`otp-input-${index - 1}`);
+      if (prevInput) {
+        prevInput.focus();
+      }
     }
   };
 
   const handleVerifyOTP = async (values: z.infer<typeof otpSchema>) => {
-    const { error } = await verifyOtp(phoneNumber, values.otp);
-    if (!error) {
-      navigate("/");
+    try {
+      const { error } = await verifyOtp(phoneNumber, values.otp);
+      if (!error) {
+        toast.success("Login successful!");
+        navigate("/");
+      } else {
+        toast.error("Invalid OTP. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
+      toast.error("Failed to verify OTP. Please try again.");
+    }
+  };
+
+  const handleResendOTP = async () => {
+    setIsResending(true);
+    // Reset OTP fields
+    setOtpValues(Array(6).fill(''));
+    otpForm.setValue("otp", "");
+    
+    try {
+      const { error } = await signInWithOtp(phoneNumber);
+      if (!error) {
+        toast.success("OTP sent again!");
+      } else {
+        toast.error("Failed to resend OTP. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error resending OTP:", error);
+      toast.error("Failed to resend OTP. Please try again.");
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -70,7 +148,7 @@ const Auth = () => {
           </CardTitle>
           <CardDescription>
             {otpSent 
-              ? "Enter the OTP sent to your mobile number"
+              ? `Enter the OTP sent to +91 ${phoneNumber}`
               : "Enter your mobile number to continue"}
           </CardDescription>
         </CardHeader>
@@ -103,8 +181,9 @@ const Auth = () => {
                   )}
                 />
                 
-                <Button type="submit" className="w-full">
-                  <Phone className="mr-2 h-4 w-4" /> Send OTP
+                <Button type="submit" className="w-full" disabled={phoneForm.formState.isSubmitting}>
+                  <Phone className="mr-2 h-4 w-4" /> 
+                  {phoneForm.formState.isSubmitting ? "Sending..." : "Send OTP"}
                 </Button>
               </form>
             </Form>
@@ -114,34 +193,45 @@ const Auth = () => {
                 <FormField
                   control={otpForm.control}
                   name="otp"
-                  render={({ field: { onChange, value, ...rest } }) => (
+                  render={() => (
                     <FormItem>
                       <FormLabel>OTP Code</FormLabel>
                       <FormControl>
-                        <InputOTP 
-                          maxLength={6} 
-                          value={value} 
-                          onChange={onChange} 
-                          {...rest}
-                          render={({ slots }) => (
-                            <InputOTPGroup>
-                              {slots.map((slot, index) => (
-                                <InputOTPSlot key={index} index={index} />
-                              ))}
-                            </InputOTPGroup>
-                          )}
-                        />
+                        <div className="flex justify-center gap-2">
+                          {Array(6).fill(0).map((_, index) => (
+                            <input
+                              key={index}
+                              id={`otp-input-${index}`}
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={1}
+                              value={otpValues[index]}
+                              onChange={(e) => handleOtpChange(index, e.target.value)}
+                              onKeyDown={(e) => handleKeyDown(index, e)}
+                              autoFocus={index === 0}
+                              className="h-12 w-12 text-center border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                              style={{ fontSize: '1.25rem' }}
+                            />
+                          ))}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 
-                <Button type="submit" className="w-full">Verify & Login</Button>
+                <Button 
+                  type="submit" 
+                  className="w-full"
+                  disabled={otpForm.formState.isSubmitting || otpValues.some(v => !v)}
+                >
+                  {otpForm.formState.isSubmitting ? "Verifying..." : "Verify & Login"}
+                </Button>
                 
                 <div className="text-center mt-4 flex justify-between">
                   <Button 
                     variant="link" 
+                    type="button"
                     onClick={() => {
                       setOtpSent(false);
                       otpForm.reset();
@@ -151,14 +241,12 @@ const Auth = () => {
                   </Button>
                   
                   <Button 
-                    variant="link" 
-                    onClick={() => {
-                      handleSendOTP({ phone: phoneNumber });
-                      otpForm.reset();
-                      toast.success("OTP sent again!");
-                    }}
+                    variant="link"
+                    type="button"
+                    disabled={isResending}
+                    onClick={handleResendOTP}
                   >
-                    Resend OTP
+                    {isResending ? "Sending..." : "Resend OTP"}
                   </Button>
                 </div>
               </form>

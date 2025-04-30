@@ -1,15 +1,16 @@
 
 import { Link } from "react-router-dom";
-import Sidebar from "./ui/sidebar";
+import { Sidebar } from "./ui/sidebar";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "./ui/button";
 import { LogOut } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
+  title?: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps> = ({ children, title }) => {
   const { signOut, profile } = useAuth();
 
   return (
@@ -88,6 +89,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </Sidebar>
       <main className="flex-1 p-0 md:p-6 overflow-auto">
+        {title && (
+          <h1 className="text-2xl font-bold mb-4">{title}</h1>
+        )}
         {children}
       </main>
     </div>

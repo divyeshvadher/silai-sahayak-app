@@ -5,12 +5,19 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Platform } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import Index from "./pages/Index";
 import Customers from "./pages/Customers";
 import Orders from "./pages/Orders";
 import Designs from "./pages/Designs";
 import NotFound from "./pages/NotFound";
+
+// Conditionally import StatusBar component
+let StatusBar: any = () => null;
+try {
+  StatusBar = require('expo-status-bar').StatusBar;
+} catch (error) {
+  console.log('expo-status-bar is not available');
+}
 
 const queryClient = new QueryClient();
 
@@ -41,7 +48,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <AppContent />
-      <StatusBar style="auto" />
+      {Platform.OS !== 'web' && <StatusBar style="auto" />}
     </TooltipProvider>
   </QueryClientProvider>
 );

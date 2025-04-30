@@ -23,3 +23,18 @@ export async function importIfAvailable(packageName: string) {
     return null;
   }
 }
+
+// Get safe storage for auth persistence
+export function getAuthStorage() {
+  if (isPlatformWeb()) {
+    return localStorage;
+  } else {
+    // For mobile environments, you might want to use a more appropriate storage
+    // This is a placeholder - in a real app you'd use AsyncStorage or equivalent
+    return {
+      getItem: (key: string) => null,
+      setItem: (key: string, value: string) => {},
+      removeItem: (key: string) => {},
+    };
+  }
+}

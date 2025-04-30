@@ -18,7 +18,7 @@ const phoneSchema = z.object({
 });
 
 const otpSchema = z.object({
-  otp: z.string().min(6, "OTP must be 6 digits")
+  otp: z.string().length(6, "OTP must be 6 digits")
 });
 
 const Auth = () => {
@@ -91,6 +91,8 @@ const Auth = () => {
                             placeholder="Enter your mobile number" 
                             className="rounded-l-none" 
                             type="tel"
+                            inputMode="numeric"
+                            pattern="[0-9]*" 
                             autoComplete="tel"
                             {...field} 
                           />
@@ -112,20 +114,23 @@ const Auth = () => {
                 <FormField
                   control={otpForm.control}
                   name="otp"
-                  render={({ field }) => (
+                  render={({ field: { onChange, value, ...rest } }) => (
                     <FormItem>
                       <FormLabel>OTP Code</FormLabel>
                       <FormControl>
-                        <InputOTP maxLength={6} {...field}>
-                          <InputOTPGroup>
-                            <InputOTPSlot index={0} />
-                            <InputOTPSlot index={1} />
-                            <InputOTPSlot index={2} />
-                            <InputOTPSlot index={3} />
-                            <InputOTPSlot index={4} />
-                            <InputOTPSlot index={5} />
-                          </InputOTPGroup>
-                        </InputOTP>
+                        <InputOTP 
+                          maxLength={6} 
+                          value={value} 
+                          onChange={onChange} 
+                          {...rest}
+                          render={({ slots }) => (
+                            <InputOTPGroup>
+                              {slots.map((slot, index) => (
+                                <InputOTPSlot key={index} index={index} />
+                              ))}
+                            </InputOTPGroup>
+                          )}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -134,7 +139,7 @@ const Auth = () => {
                 
                 <Button type="submit" className="w-full">Verify & Login</Button>
                 
-                <div className="text-center mt-4">
+                <div className="text-center mt-4 flex justify-between">
                   <Button 
                     variant="link" 
                     onClick={() => {
@@ -150,6 +155,7 @@ const Auth = () => {
                     onClick={() => {
                       handleSendOTP({ phone: phoneNumber });
                       otpForm.reset();
+                      toast.success("OTP sent again!");
                     }}
                   >
                     Resend OTP

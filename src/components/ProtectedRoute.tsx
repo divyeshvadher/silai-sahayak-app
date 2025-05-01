@@ -10,10 +10,11 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
   
   if (loading) {
-    // You can show a loading spinner here
+    // Show a better loading spinner
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex justify-center items-center h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary"></div>
+        <p className="ml-4 text-lg text-gray-600">Loading...</p>
       </div>
     );
   }

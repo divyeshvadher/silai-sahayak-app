@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -10,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/sonner";
 import { Phone } from "lucide-react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 // Define schema for validation
 const phoneSchema = z.object({
@@ -25,7 +27,6 @@ const Auth = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isResending, setIsResending] = useState(false);
-  const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(''));
   const navigate = useNavigate();
 
   // If user is already logged in, redirect to home
@@ -54,7 +55,6 @@ const Auth = () => {
       if (!error) {
         setOtpSent(true);
         setPhoneNumber(values.phone);
-        setOtpValues(Array(6).fill('')); // Reset OTP values
         otpForm.setValue("otp", ""); // Reset OTP in the form
       }
     } catch (error) {
@@ -65,50 +65,15 @@ const Auth = () => {
     }
   };
 
-  const handleOtpChange = (index: number, value: string) => {
-    // Only allow numbers
-    if (value && !/^\d*$/.test(value)) return;
-    
-    // Update the OTP values
-    const newOtpValues = [...otpValues];
-    newOtpValues[index] = value;
-    setOtpValues(newOtpValues);
-    
-    // Update the form value
-    otpForm.setValue("otp", newOtpValues.join(''), { shouldValidate: true });
-    
-    // Auto-focus next input if value is entered
-    if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-input-${index + 1}`);
-      if (nextInput) {
-        nextInput.focus();
-      }
-    }
-    
-    // Auto-submit if all digits are entered
-    if (newOtpValues.every(v => v) && newOtpValues.length === 6) {
-      setTimeout(() => {
-        otpForm.handleSubmit(handleVerifyOTP)();
-      }, 300);
-    }
-  };
-
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Handle backspace
-    if (e.key === 'Backspace' && !otpValues[index] && index > 0) {
-      const prevInput = document.getElementById(`otp-input-${index - 1}`);
-      if (prevInput) {
-        prevInput.focus();
-      }
-    }
-  };
-
   const handleVerifyOTP = async (values: z.infer<typeof otpSchema>) => {
     try {
       const { error } = await verifyOtp(phoneNumber, values.otp);
       if (!error) {
         toast.success("Login successful!");
-        navigate("/");
+        // Add a slight delay before navigation to ensure auth context is updated
+        setTimeout(() => {
+          navigate("/", { replace: true });
+        }, 300);
       } else {
         toast.error("Invalid OTP. Please try again.");
       }
@@ -121,7 +86,6 @@ const Auth = () => {
   const handleResendOTP = async () => {
     setIsResending(true);
     // Reset OTP fields
-    setOtpValues(Array(6).fill(''));
     otpForm.setValue("otp", "");
     
     try {
@@ -193,27 +157,20 @@ const Auth = () => {
                 <FormField
                   control={otpForm.control}
                   name="otp"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>OTP Code</FormLabel>
                       <FormControl>
-                        <div className="flex justify-center gap-2">
-                          {Array(6).fill(0).map((_, index) => (
-                            <input
-                              key={index}
-                              id={`otp-input-${index}`}
-                              type="text"
-                              inputMode="numeric"
-                              maxLength={1}
-                              value={otpValues[index]}
-                              onChange={(e) => handleOtpChange(index, e.target.value)}
-                              onKeyDown={(e) => handleKeyDown(index, e)}
-                              autoFocus={index === 0}
-                              className="h-12 w-12 text-center border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                              style={{ fontSize: '1.25rem' }}
-                            />
-                          ))}
-                        </div>
+                        <InputOTP maxLength={6} {...field}>
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -223,7 +180,7 @@ const Auth = () => {
                 <Button 
                   type="submit" 
                   className="w-full"
-                  disabled={otpForm.formState.isSubmitting || otpValues.some(v => !v)}
+                  disabled={otpForm.formState.isSubmitting}
                 >
                   {otpForm.formState.isSubmitting ? "Verifying..." : "Verify & Login"}
                 </Button>

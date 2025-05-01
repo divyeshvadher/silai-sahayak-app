@@ -9,8 +9,8 @@ type AuthContextType = {
   user: User | null;
   profile: any | null;
   loading: boolean;
-  signInWithOtp: (phone: string) => Promise<{ error: any | null }>;
-  verifyOtp: (phone: string, token: string) => Promise<{ error: any | null }>;
+  signUp: (email: string, password: string, metaData: any) => Promise<{ error: any | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: any | null }>;
   signOut: () => Promise<void>;
 };
 
@@ -73,11 +73,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signInWithOtp = async (phone: string) => {
+  const signUp = async (email: string, password: string, metaData: any) => {
     try {
-      const formattedPhone = formatPhoneNumber(phone);
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: formattedPhone,
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: metaData
+        }
       });
 
       if (error) {
@@ -85,21 +88,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
       
-      toast.success("OTP sent successfully!");
+      toast.success("Account created successfully!");
       return { error: null };
     } catch (error: any) {
-      toast.error(error.message || "An error occurred during sign in");
+      toast.error(error.message || "An error occurred during sign up");
       return { error };
     }
   };
 
-  const verifyOtp = async (phone: string, token: string) => {
+  const signIn = async (email: string, password: string) => {
     try {
-      const formattedPhone = formatPhoneNumber(phone);
-      const { error } = await supabase.auth.verifyOtp({
-        phone: formattedPhone,
-        token,
-        type: "sms",
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
 
       if (error) {
@@ -107,10 +108,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
       
-      toast.success("Successfully authenticated!");
+      toast.success("Logged in successfully!");
       return { error: null };
     } catch (error: any) {
-      toast.error(error.message || "Failed to verify OTP");
+      toast.error(error.message || "An error occurred during sign in");
       return { error };
     }
   };
@@ -120,19 +121,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     toast.success("Signed out successfully");
   };
 
-  // Helper to ensure phone number is in E.164 format
-  const formatPhoneNumber = (phone: string): string => {
-    // Remove all non-numeric characters
-    const numericPhone = phone.replace(/\D/g, '');
-    
-    // If the phone doesn't start with +, add +91 (India) prefix
-    if (!phone.startsWith('+')) {
-      return `+91${numericPhone}`;
-    }
-    
-    return phone;
-  };
-
   return (
     <AuthContext.Provider
       value={{
@@ -140,8 +128,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         profile,
         loading,
-        signInWithOtp,
-        verifyOtp,
+        signUp,
+        signIn,
         signOut,
       }}
     >

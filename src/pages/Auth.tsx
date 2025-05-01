@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -65,8 +64,8 @@ const Auth = () => {
 
   const handleLogin = async (values: z.infer<typeof loginSchema>) => {
     try {
-      // Generate email from shop name for authentication (since Supabase requires email format)
-      const email = `${values.shopName.toLowerCase().replace(/\s+/g, '_')}@shop.silaisahayak.com`;
+      // Generate email from shop name for authentication (using Gmail domain instead)
+      const email = `${values.shopName.toLowerCase().replace(/\s+/g, '.')}@silaisahayak.com`;
       
       const { error } = await signIn(email, values.password);
       
@@ -84,8 +83,8 @@ const Auth = () => {
 
   const handleSignup = async (values: z.infer<typeof signupSchema>) => {
     try {
-      // Generate email from shop name for authentication (since Supabase requires email format)
-      const email = `${values.shopName.toLowerCase().replace(/\s+/g, '_')}@shop.silaisahayak.com`;
+      // Generate email from shop name for authentication (using Gmail domain instead)
+      const email = `${values.shopName.toLowerCase().replace(/\s+/g, '.')}@silaisahayak.com`;
       
       // Create user metadata
       const metadata = {

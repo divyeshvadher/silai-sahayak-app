@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "@/components/ui/sonner";
-import { User, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 // Define schema for validation
 const signupSchema = z.object({
@@ -16,6 +16,7 @@ const signupSchema = z.object({
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   mobileNumber: z.string().min(10, "Phone number must be at least 10 digits"),
   shopName: z.string().min(3, "Shop name must be at least 3 characters"),
+  email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Confirm password must be at least 6 characters")
 }).refine((data) => data.password === data.confirmPassword, {
@@ -40,6 +41,7 @@ const SignupForm = ({ onLoginClick, onSignupSuccess }: SignupFormProps) => {
       lastName: "",
       mobileNumber: "",
       shopName: "",
+      email: "",
       password: "",
       confirmPassword: "",
     },
@@ -47,8 +49,8 @@ const SignupForm = ({ onLoginClick, onSignupSuccess }: SignupFormProps) => {
 
   const handleSignup = async (values: z.infer<typeof signupSchema>) => {
     try {
-      // Generate email from shop name for authentication (using Gmail domain instead)
-      const email = `${values.shopName.toLowerCase().replace(/\s+/g, '.')}@silaisahayak.com`;
+      // Use user-provided email directly
+      const { email, password } = values;
       
       // Create user metadata
       const metadata = {
@@ -58,7 +60,7 @@ const SignupForm = ({ onLoginClick, onSignupSuccess }: SignupFormProps) => {
         shop_name: values.shopName,
       };
       
-      const { error } = await signUp(email, values.password, metadata);
+      const { error } = await signUp(email, password, metadata);
       
       if (!error) {
         toast.success("Account created successfully! You can now login.");
@@ -149,6 +151,29 @@ const SignupForm = ({ onLoginClick, onSignupSuccess }: SignupFormProps) => {
                   <Input 
                     placeholder="Enter your shop name" 
                     className="pl-10"
+                    {...field} 
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email Address</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Enter your email address" 
+                    className="pl-10"
+                    type="email"
+                    autoComplete="email"
                     {...field} 
                   />
                 </div>

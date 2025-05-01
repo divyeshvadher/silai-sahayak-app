@@ -9,11 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "@/components/ui/sonner";
-import { User, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 // Define schema for validation
 const loginSchema = z.object({
-  shopName: z.string().min(3, "Shop name must be at least 3 characters"),
+  email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters")
 });
 
@@ -25,17 +25,16 @@ const LoginForm = ({ onSignupClick }: { onSignupClick: () => void }) => {
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      shopName: "",
+      email: "",
       password: "",
     },
   });
 
   const handleLogin = async (values: z.infer<typeof loginSchema>) => {
     try {
-      // Generate email from shop name for authentication (using Gmail domain instead)
-      const email = `${values.shopName.toLowerCase().replace(/\s+/g, '.')}@silaisahayak.com`;
+      const { email, password } = values;
       
-      const { error } = await signIn(email, values.password);
+      const { error } = await signIn(email, password);
       
       if (!error) {
         // Add a slight delay to ensure auth context is updated
@@ -56,16 +55,18 @@ const LoginForm = ({ onSignupClick }: { onSignupClick: () => void }) => {
       <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
         <FormField
           control={form.control}
-          name="shopName"
+          name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Shop Name</FormLabel>
+              <FormLabel>Email Address</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input 
-                    placeholder="Enter your shop name" 
+                    placeholder="Enter your email address" 
                     className="pl-10"
+                    type="email"
+                    autoComplete="email"
                     {...field} 
                   />
                 </div>

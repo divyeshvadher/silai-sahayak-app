@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { OTPInput, OTPInputContext } from "input-otp"
 import { Dot } from "lucide-react"
@@ -27,6 +28,13 @@ const InputOTPGroup = React.forwardRef<
 ))
 InputOTPGroup.displayName = "InputOTPGroup"
 
+// Define type for slot object to fix TypeScript errors
+interface OTPSlot {
+  char?: string;
+  hasFakeCaret?: boolean;
+  isActive?: boolean;
+}
+
 const InputOTPSlot = React.forwardRef<
   React.ElementRef<"div">,
   React.ComponentPropsWithoutRef<"div"> & { index: number }
@@ -52,8 +60,8 @@ const InputOTPSlot = React.forwardRef<
     return null;
   }
   
-  // Get slot data safely
-  const slot = inputOTPContext.slots[index] || {};
+  // Get slot data safely and explicitly type it
+  const slot = inputOTPContext.slots[index] as OTPSlot || {};
   const { char = "", hasFakeCaret = false, isActive = false } = slot;
   
   return (

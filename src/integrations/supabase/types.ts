@@ -9,6 +9,95 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      measurements: {
+        Row: {
+          id: string
+          name: string
+          order_id: string | null
+          unit: string
+          value: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          order_id?: string | null
+          unit?: string
+          value: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          order_id?: string | null
+          unit?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurements_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          advance_paid: number | null
+          created_at: string
+          created_by: string
+          customer_name: string
+          delivery_date: string | null
+          due_date: string
+          fabric_provided_by: string
+          fabric_type: string | null
+          garment_type: string
+          id: string
+          notes: string | null
+          phone_number: string | null
+          price: number
+          priority_level: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          advance_paid?: number | null
+          created_at?: string
+          created_by: string
+          customer_name: string
+          delivery_date?: string | null
+          due_date: string
+          fabric_provided_by: string
+          fabric_type?: string | null
+          garment_type: string
+          id: string
+          notes?: string | null
+          phone_number?: string | null
+          price: number
+          priority_level: string
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          advance_paid?: number | null
+          created_at?: string
+          created_by?: string
+          customer_name?: string
+          delivery_date?: string | null
+          due_date?: string
+          fabric_provided_by?: string
+          fabric_type?: string | null
+          garment_type?: string
+          id?: string
+          notes?: string | null
+          phone_number?: string | null
+          price?: number
+          priority_level?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           full_name: string | null

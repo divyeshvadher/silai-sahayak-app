@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { CalendarIcon, Tape, Plus, Trash2 } from "lucide-react";
+import { CalendarIcon, Ruler, Plus, Trash2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
@@ -126,7 +126,11 @@ const NewOrder = () => {
       created_by: user.id,
     };
 
-    const { data, error } = await supabase.from("orders").insert(order).select().single();
+    const { data, error } = await supabase
+      .from("orders")
+      .insert(order)
+      .select()
+      .single();
     
     if (error) {
       throw error;
@@ -157,7 +161,7 @@ const NewOrder = () => {
     mutationFn: createOrder,
     onSuccess: (data) => {
       toast.success("Order created successfully!");
-      navigate(`/orders/${data.id}`);
+      navigate(`/orders`);
     },
     onError: (error) => {
       toast.error(`Failed to create order: ${error.message}`);
@@ -455,7 +459,7 @@ const NewOrder = () => {
                 <div className="border rounded-md p-4 bg-gray-50">
                   {customMeasurements.length === 0 ? (
                     <div className="text-center py-4 text-gray-500">
-                      <Tape className="mx-auto h-12 w-12 text-gray-400 mb-2" />
+                      <Ruler className="mx-auto h-12 w-12 text-gray-400 mb-2" />
                       <p>No measurements added yet.</p>
                       <Button 
                         type="button" 

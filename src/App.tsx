@@ -9,6 +9,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Customers from "./pages/Customers";
 import Orders from "./pages/Orders";
+import NewOrder from "./pages/NewOrder";
 import Designs from "./pages/Designs";
 import UserEdit from "./pages/UserEdit";
 import Auth from "./pages/Auth";
@@ -34,6 +35,7 @@ const AppContent = () => {
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+          <Route path="/orders/new" element={<ProtectedRoute><NewOrder /></ProtectedRoute>} />
           <Route path="/designs" element={<ProtectedRoute><Designs /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><UserEdit /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />

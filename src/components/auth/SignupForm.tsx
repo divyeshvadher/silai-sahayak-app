@@ -60,9 +60,11 @@ const SignupForm = ({ onLoginClick, onSignupSuccess }: SignupFormProps) => {
         shop_name: values.shopName,
       };
       
-      const { error } = await signUp(email, password, metadata);
+      const response = await signUp(email, password, metadata);
       
-      if (!error) {
+      if (response?.error) {
+        toast.error(response.error.message || "Failed to create account. Please try again.");
+      } else {
         toast.success("Account created successfully! You can now login.");
         onSignupSuccess(values.shopName);
       }

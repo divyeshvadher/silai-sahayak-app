@@ -34,9 +34,11 @@ const LoginForm = ({ onSignupClick }: { onSignupClick: () => void }) => {
     try {
       const { email, password } = values;
       
-      const { error } = await signIn(email, password);
+      const response = await signIn(email, password);
       
-      if (!error) {
+      if (response?.error) {
+        toast.error(response.error.message || "Failed to login. Please try again.");
+      } else {
         // Add a slight delay to ensure auth context is updated
         setTimeout(() => {
           navigate("/", { replace: true });

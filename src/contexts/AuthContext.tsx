@@ -7,8 +7,8 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   profile: any | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, options?: any) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ error: any } | undefined>;
+  signUp: (email: string, password: string, options?: any) => Promise<{ error: any } | undefined>;
   signOut: () => void;
   loading: boolean;
   refreshProfile: () => Promise<any>;
@@ -18,8 +18,8 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   profile: null,
-  signIn: async () => {},
-  signUp: async () => {},
+  signIn: async () => undefined,
+  signUp: async () => undefined,
   signOut: () => {},
   loading: true,
   refreshProfile: async () => {},
@@ -87,13 +87,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    const response = await supabase.auth.signInWithPassword({ email, password });
+    return response;
   };
 
   const signUp = async (email: string, password: string, options?: any) => {
-    const { error } = await supabase.auth.signUp({ email, password, options });
-    if (error) throw error;
+    const response = await supabase.auth.signUp({ 
+      email, 
+      password, 
+      options: { data: options } 
+    });
+    return response;
   };
 
   const signOut = async () => {
@@ -115,5 +119,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export const useAuth = () => {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };

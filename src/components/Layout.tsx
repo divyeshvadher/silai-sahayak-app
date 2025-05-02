@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "./ui/button";
-import { LogOut, Home, Users, ShoppingBag, Palette, Menu } from "lucide-react";
+import { LogOut, Home, Users, ShoppingBag, Palette, Menu, UserRound } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -67,15 +67,15 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
             {profile && (
               <SidebarFooter>
                 <div className="border-t border-gray-200 pt-4 mt-4 p-4">
-                  <div className="flex items-center mb-3">
+                  <Link to="/profile" className="flex items-center mb-3 hover:bg-gray-100 rounded-md p-2 transition-colors">
                     <div className="w-8 h-8 rounded-full bg-silai-600 text-white flex items-center justify-center mr-2">
-                      {profile.full_name ? profile.full_name[0] : '👤'}
+                      {profile.full_name ? profile.full_name[0] : <UserRound className="w-4 h-4" />}
                     </div>
                     <div>
                       <p className="text-sm font-semibold">{profile.full_name || 'User'}</p>
                       <p className="text-xs text-gray-500">{profile.phone_number}</p>
                     </div>
-                  </div>
+                  </Link>
                   <Button 
                     variant="ghost" 
                     className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
@@ -99,7 +99,9 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
             <div className="flex-1 text-center">
               <h1 className="text-xl font-bold">Silai Sahayak</h1>
             </div>
-            <div className="w-5"></div> {/* For balance */}
+            <Link to="/profile" className="w-8 h-8 rounded-full bg-silai-600 text-white flex items-center justify-center">
+              {profile?.full_name ? profile.full_name[0] : <UserRound className="w-4 h-4" />}
+            </Link>
           </div>
           
           <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">

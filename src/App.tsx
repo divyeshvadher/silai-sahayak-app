@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Customers from "./pages/Customers";
 import Orders from "./pages/Orders";
 import Designs from "./pages/Designs";
+import UserEdit from "./pages/UserEdit";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -34,6 +35,7 @@ const AppContent = () => {
           <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           <Route path="/designs" element={<ProtectedRoute><Designs /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><UserEdit /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

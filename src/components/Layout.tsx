@@ -13,6 +13,7 @@ import {
   SidebarMenuButton,
   SidebarFooter
 } from "./ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,6 +22,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, title }) => {
   const { signOut, profile } = useAuth();
+  const isMobile = useIsMobile();
 
   const navItems = [
     { path: "/", icon: <Home className="w-5 h-5" />, label: "Home" },
@@ -30,20 +32,19 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
   ];
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={!isMobile}>
       <div className="min-h-screen w-full flex">
+        {/* Desktop Sidebar */}
         <Sidebar>
-          <SidebarContent className="flex flex-col justify-between h-full">
-            {/* Mobile view: Logo at top */}
-            <div className="md:mb-8 p-4">
+          <SidebarContent className="flex flex-col h-full">
+            <div className="p-4 mb-4">
               <Link to="/" className="flex items-center gap-2">
                 <img src="/logo.svg" alt="Silai Sahayak Logo" className="w-8 h-8" />
                 <h1 className="text-xl font-bold">Silai Sahayak</h1>
               </Link>
             </div>
-
-            {/* Desktop view: Navigation below logo */}
-            <div className="hidden md:block flex-1">
+            
+            <div className="flex-1">
               <SidebarMenu>
                 {navItems.map((item) => (
                   <SidebarMenuItem key={item.path}>
@@ -62,79 +63,68 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
               </SidebarMenu>
             </div>
 
-            {/* Desktop view: User profile at bottom */}
+            {/* User profile section */}
             {profile && (
-              <div className="hidden md:block">
-                <SidebarFooter>
-                  <div className="border-t border-gray-200 pt-4 mt-4 p-4">
-                    <div className="flex items-center mb-3">
-                      <div className="w-8 h-8 rounded-full bg-silai-600 text-white flex items-center justify-center mr-2">
-                        {profile.full_name ? profile.full_name[0] : '👤'}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold">{profile.full_name || 'User'}</p>
-                        <p className="text-xs text-gray-500">{profile.phone_number}</p>
-                      </div>
+              <SidebarFooter>
+                <div className="border-t border-gray-200 pt-4 mt-4 p-4">
+                  <div className="flex items-center mb-3">
+                    <div className="w-8 h-8 rounded-full bg-silai-600 text-white flex items-center justify-center mr-2">
+                      {profile.full_name ? profile.full_name[0] : '👤'}
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
-                      onClick={signOut}
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Sign Out
-                    </Button>
+                    <div>
+                      <p className="text-sm font-semibold">{profile.full_name || 'User'}</p>
+                      <p className="text-xs text-gray-500">{profile.phone_number}</p>
+                    </div>
                   </div>
-                </SidebarFooter>
-              </div>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
+                    onClick={signOut}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </div>
+              </SidebarFooter>
             )}
-
-            {/* Mobile view: Navigation at bottom */}
-            <div className="md:hidden mt-auto">
-              <SidebarMenu className="border-t border-gray-200 pt-2">
-                {navItems.map((item) => (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton 
-                      asChild 
-                      tooltip={item.label}
-                      isActive={window.location.pathname === item.path}
-                    >
-                      <Link to={item.path} className="flex items-center justify-center flex-col py-2">
-                        {item.icon}
-                        <span className="text-xs mt-1">{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-                {profile && (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton 
-                      onClick={signOut}
-                      tooltip="Sign Out"
-                    >
-                      <div className="flex items-center justify-center flex-col py-2">
-                        <LogOut className="w-5 h-5 text-red-600" />
-                        <span className="text-xs mt-1 text-red-600">Sign Out</span>
-                      </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )}
-              </SidebarMenu>
-            </div>
           </SidebarContent>
         </Sidebar>
         
         <div className="flex-1 flex flex-col overflow-auto">
-          <div className="bg-white border-b p-3 flex items-center md:hidden">
+          {/* Mobile Header */}
+          <div className="bg-white border-b p-4 flex items-center md:hidden">
             <SidebarTrigger className="mr-2">
               <Menu className="w-5 h-5" />
             </SidebarTrigger>
-            {title && <h1 className="text-xl font-bold">{title}</h1>}
+            <div className="flex-1 text-center">
+              <h1 className="text-xl font-bold">Silai Sahayak</h1>
+            </div>
+            <div className="w-5"></div> {/* For balance */}
           </div>
-          <main className="flex-1 p-4 md:p-6">
+          
+          <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
             {title && <h1 className="text-2xl font-bold mb-4 hidden md:block">{title}</h1>}
             {children}
           </main>
+          
+          {/* Mobile Bottom Navigation */}
+          <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center z-10">
+            {navItems.map((item) => {
+              const isActive = window.location.pathname === item.path;
+              return (
+                <Link 
+                  key={item.path} 
+                  to={item.path} 
+                  className={`flex flex-col items-center py-3 px-2 flex-1 ${
+                    isActive ? "text-silai-600" : "text-gray-500"
+                  }`}
+                >
+                  {item.icon}
+                  <span className="text-xs mt-1">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </div>
     </SidebarProvider>

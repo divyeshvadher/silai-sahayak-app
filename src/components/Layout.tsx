@@ -33,54 +33,94 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen w-full flex">
         <Sidebar>
-          <SidebarContent>
-            <div className="mb-8 p-4">
+          <SidebarContent className="flex flex-col justify-between h-full">
+            {/* Mobile view: Logo at top */}
+            <div className="md:mb-8 p-4">
               <Link to="/" className="flex items-center gap-2">
                 <img src="/logo.svg" alt="Silai Sahayak Logo" className="w-8 h-8" />
                 <h1 className="text-xl font-bold">Silai Sahayak</h1>
               </Link>
             </div>
 
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton 
-                    asChild 
-                    tooltip={item.label}
-                    isActive={window.location.pathname === item.path}
-                  >
-                    <Link to={item.path} className="flex items-center gap-2">
-                      {item.icon}
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            {/* Desktop view: Navigation below logo */}
+            <div className="hidden md:block flex-1">
+              <SidebarMenu>
+                {navItems.map((item) => (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton 
+                      asChild 
+                      tooltip={item.label}
+                      isActive={window.location.pathname === item.path}
+                    >
+                      <Link to={item.path} className="flex items-center gap-2">
+                        {item.icon}
+                        <span>{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </div>
 
+            {/* Desktop view: User profile at bottom */}
             {profile && (
-              <SidebarFooter>
-                <div className="border-t border-gray-200 pt-4 mt-4 p-4">
-                  <div className="flex items-center mb-3">
-                    <div className="w-8 h-8 rounded-full bg-silai-600 text-white flex items-center justify-center mr-2">
-                      {profile.full_name ? profile.full_name[0] : '👤'}
+              <div className="hidden md:block">
+                <SidebarFooter>
+                  <div className="border-t border-gray-200 pt-4 mt-4 p-4">
+                    <div className="flex items-center mb-3">
+                      <div className="w-8 h-8 rounded-full bg-silai-600 text-white flex items-center justify-center mr-2">
+                        {profile.full_name ? profile.full_name[0] : '👤'}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">{profile.full_name || 'User'}</p>
+                        <p className="text-xs text-gray-500">{profile.phone_number}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold">{profile.full_name || 'User'}</p>
-                      <p className="text-xs text-gray-500">{profile.phone_number}</p>
-                    </div>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
+                      onClick={signOut}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </Button>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
-                    onClick={signOut}
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </Button>
-                </div>
-              </SidebarFooter>
+                </SidebarFooter>
+              </div>
             )}
+
+            {/* Mobile view: Navigation at bottom */}
+            <div className="md:hidden mt-auto">
+              <SidebarMenu className="border-t border-gray-200 pt-2">
+                {navItems.map((item) => (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton 
+                      asChild 
+                      tooltip={item.label}
+                      isActive={window.location.pathname === item.path}
+                    >
+                      <Link to={item.path} className="flex items-center justify-center flex-col py-2">
+                        {item.icon}
+                        <span className="text-xs mt-1">{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+                {profile && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      onClick={signOut}
+                      tooltip="Sign Out"
+                    >
+                      <div className="flex items-center justify-center flex-col py-2">
+                        <LogOut className="w-5 h-5 text-red-600" />
+                        <span className="text-xs mt-1 text-red-600">Sign Out</span>
+                      </div>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
+              </SidebarMenu>
+            </div>
           </SidebarContent>
         </Sidebar>
         

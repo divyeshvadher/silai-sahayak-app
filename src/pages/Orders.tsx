@@ -19,6 +19,16 @@ type Order = {
   status: "pending" | "in-progress" | "completed" | "delivered";
 };
 
+// Type for raw data from Supabase
+type RawOrder = {
+  id: string;
+  customer_name: string;
+  garment_type: string;
+  due_date: string;
+  status: string;
+  [key: string]: any; // Allow other properties
+};
+
 const Orders = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -42,7 +52,19 @@ const Orders = () => {
         }
         
         if (data) {
-          setOrders(data);
+          // Transform the raw data to match our Order type
+          const typedOrders: Order[] = data.map((order: RawOrder) => ({
+            id: order.id,
+            customer_name: order.customer_name,
+            garment_type: order.garment_type,
+            due_date: order.due_date,
+            // Ensure status is one of the allowed values, default to "pending" if not
+            status: ["pending", "in-progress", "completed", "delivered"].includes(order.status) 
+              ? order.status as "pending" | "in-progress" | "completed" | "delivered"
+              : "pending"
+          }));
+          
+          setOrders(typedOrders);
         }
       } catch (error: any) {
         toast.error(`Error loading orders: ${error.message}`);
@@ -60,11 +82,31 @@ const Orders = () => {
         { event: '*', schema: 'public', table: 'orders' }, 
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setOrders(prevOrders => [...prevOrders, payload.new as Order]);
+            const newOrder = payload.new as RawOrder;
+            const typedNewOrder: Order = {
+              id: newOrder.id,
+              customer_name: newOrder.customer_name,
+              garment_type: newOrder.garment_type,
+              due_date: newOrder.due_date,
+              status: ["pending", "in-progress", "completed", "delivered"].includes(newOrder.status) 
+                ? newOrder.status as "pending" | "in-progress" | "completed" | "delivered"
+                : "pending"
+            };
+            setOrders(prevOrders => [...prevOrders, typedNewOrder]);
           } else if (payload.eventType === 'UPDATE') {
+            const updatedOrder = payload.new as RawOrder;
+            const typedUpdatedOrder: Order = {
+              id: updatedOrder.id,
+              customer_name: updatedOrder.customer_name,
+              garment_type: updatedOrder.garment_type,
+              due_date: updatedOrder.due_date,
+              status: ["pending", "in-progress", "completed", "delivered"].includes(updatedOrder.status) 
+                ? updatedOrder.status as "pending" | "in-progress" | "completed" | "delivered"
+                : "pending"
+            };
             setOrders(prevOrders => 
               prevOrders.map(order => 
-                order.id === payload.new.id ? payload.new as Order : order
+                order.id === typedUpdatedOrder.id ? typedUpdatedOrder : order
               )
             );
           } else if (payload.eventType === 'DELETE') {

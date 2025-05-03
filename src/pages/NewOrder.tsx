@@ -116,8 +116,8 @@ const NewOrder = () => {
       garment_type: values.garmentType,
       fabric_type: values.fabricType || null,
       fabric_provided_by: values.fabricProvided,
-      due_date: values.dueDate,
-      delivery_date: values.deliveryDate || null,
+      due_date: format(values.dueDate, 'yyyy-MM-dd'), // Format date as string
+      delivery_date: values.deliveryDate ? format(values.deliveryDate, 'yyyy-MM-dd') : null, // Format date as string if exists
       price: parseFloat(values.price),
       advance_paid: values.advancePaid ? parseFloat(values.advancePaid) : 0,
       notes: values.notes || null,

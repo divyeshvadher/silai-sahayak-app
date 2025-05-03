@@ -1,11 +1,28 @@
 
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Clock, Phone, Scissors, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 type OrderDetail = {
   id: string;
@@ -27,8 +44,13 @@ type OrderDetail = {
 
 const OrderDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [editedOrder, setEditedOrder] = useState<Partial<OrderDetail>>({});
+  const [newStatus, setNewStatus] = useState<"pending" | "in-progress" | "completed" | "delivered">("pending");
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -52,10 +74,14 @@ const OrderDetail = () => {
             ? data.status as "pending" | "in-progress" | "completed" | "delivered"
             : "pending";
             
-          setOrder({
+          const orderData = {
             ...data,
             status
-          });
+          };
+          
+          setOrder(orderData);
+          setEditedOrder(orderData);
+          setNewStatus(orderData.status);
         }
       } catch (error: any) {
         toast.error(`Error loading order details: ${error.message}`);
@@ -66,6 +92,84 @@ const OrderDetail = () => {
     
     fetchOrderDetails();
   }, [id]);
+  
+  const handleUpdateStatus = async () => {
+    if (!id || !order) return;
+    
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", id);
+        
+      if (error) throw error;
+      
+      toast.success("Order status updated successfully");
+      setOrder({
+        ...order,
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      });
+      
+      setStatusDialogOpen(false);
+    } catch (error: any) {
+      toast.error(`Failed to update status: ${error.message}`);
+    }
+  };
+  
+  const handleEditOrder = async () => {
+    if (!id || !editedOrder) return;
+    
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({
+          customer_name: editedOrder.customer_name,
+          phone_number: editedOrder.phone_number,
+          garment_type: editedOrder.garment_type,
+          fabric_type: editedOrder.fabric_type,
+          due_date: editedOrder.due_date,
+          delivery_date: editedOrder.delivery_date,
+          price: editedOrder.price,
+          advance_paid: editedOrder.advance_paid,
+          notes: editedOrder.notes,
+          priority_level: editedOrder.priority_level,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", id);
+        
+      if (error) throw error;
+      
+      toast.success("Order updated successfully");
+      setOrder({
+        ...order!,
+        ...editedOrder,
+        updated_at: new Date().toISOString()
+      } as OrderDetail);
+      
+      setEditDialogOpen(false);
+    } catch (error: any) {
+      toast.error(`Failed to update order: ${error.message}`);
+    }
+  };
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEditedOrder(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  const handleSelectChange = (name: string, value: string) => {
+    setEditedOrder(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
   
   // Status styling for the badge
   const statusStyles = {
@@ -207,10 +311,17 @@ const OrderDetail = () => {
             
             {/* Actions */}
             <div className="flex space-x-3 pt-2">
-              <Button className="bg-silai-600 hover:bg-silai-700 flex-1">
+              <Button 
+                className="bg-silai-600 hover:bg-silai-700 flex-1" 
+                onClick={() => setEditDialogOpen(true)}
+              >
                 Edit Order
               </Button>
-              <Button variant="outline" className="flex-1">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => setStatusDialogOpen(true)}
+              >
                 Update Status
               </Button>
             </div>
@@ -224,6 +335,176 @@ const OrderDetail = () => {
           </div>
         )}
       </div>
+      
+      {/* Edit Order Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Order</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="customer_name">Customer Name</Label>
+                <Input
+                  id="customer_name"
+                  name="customer_name"
+                  value={editedOrder.customer_name || ''}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone_number">Phone Number</Label>
+                <Input
+                  id="phone_number"
+                  name="phone_number"
+                  value={editedOrder.phone_number || ''}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="garment_type">Garment Type</Label>
+                <Input
+                  id="garment_type"
+                  name="garment_type"
+                  value={editedOrder.garment_type || ''}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div>
+                <Label htmlFor="fabric_type">Fabric Type</Label>
+                <Input
+                  id="fabric_type"
+                  name="fabric_type"
+                  value={editedOrder.fabric_type || ''}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="due_date">Due Date</Label>
+                <Input
+                  id="due_date"
+                  name="due_date"
+                  type="date"
+                  value={editedOrder.due_date ? new Date(editedOrder.due_date).toISOString().split('T')[0] : ''}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div>
+                <Label htmlFor="delivery_date">Delivery Date</Label>
+                <Input
+                  id="delivery_date"
+                  name="delivery_date"
+                  type="date"
+                  value={editedOrder.delivery_date ? new Date(editedOrder.delivery_date).toISOString().split('T')[0] : ''}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="price">Price</Label>
+                <Input
+                  id="price"
+                  name="price"
+                  type="number"
+                  value={editedOrder.price || ''}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div>
+                <Label htmlFor="advance_paid">Advance Paid</Label>
+                <Input
+                  id="advance_paid"
+                  name="advance_paid"
+                  type="number"
+                  value={editedOrder.advance_paid || ''}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="priority_level">Priority Level</Label>
+              <Select 
+                name="priority_level"
+                value={editedOrder.priority_level || 'normal'}
+                onValueChange={(value) => handleSelectChange('priority_level', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                name="notes"
+                value={editedOrder.notes || ''}
+                onChange={handleInputChange}
+                rows={3}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+            <Button className="bg-silai-600 hover:bg-silai-700" onClick={handleEditOrder}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Update Status Dialog */}
+      <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Update Order Status</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Label htmlFor="status">Order Status</Label>
+            <Select 
+              value={newStatus}
+              onValueChange={(value) => setNewStatus(value as "pending" | "in-progress" | "completed" | "delivered")}
+            >
+              <SelectTrigger className="w-full mt-2">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="in-progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="delivered">Delivered</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStatusDialogOpen(false)}>Cancel</Button>
+            <Button className="bg-silai-600 hover:bg-silai-700" onClick={handleUpdateStatus}>
+              Update Status
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

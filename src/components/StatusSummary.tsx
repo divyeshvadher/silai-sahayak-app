@@ -1,4 +1,6 @@
 
+import { Card, CardContent } from "@/components/ui/card";
+
 interface StatusSummaryProps {
   title: string;
   count: number;
@@ -8,15 +10,19 @@ interface StatusSummaryProps {
 
 const StatusSummary = ({ title, count, icon, color }: StatusSummaryProps) => {
   return (
-    <div className={`silai-card flex items-center border-l-4 ${color}`}>
-      <div className="mr-3">
-        {icon}
-      </div>
-      <div>
-        <p className="text-sm text-gray-500">{title}</p>
-        <p className="text-xl font-bold">{count}</p>
-      </div>
-    </div>
+    <Card className={`overflow-hidden transition-all hover:shadow-md ${color}`}>
+      <CardContent className="p-0">
+        <div className="p-4">
+          <div className="flex items-center mb-2">
+            <div className={`mr-2 p-2 rounded-full bg-opacity-10 ${color.replace('border-', 'bg-')}`}>
+              {icon}
+            </div>
+            <p className="text-sm font-medium text-gray-600">{title}</p>
+          </div>
+          <p className="text-2xl font-bold">{count}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

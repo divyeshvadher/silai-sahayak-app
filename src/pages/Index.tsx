@@ -3,11 +3,13 @@ import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import StatusSummary from "../components/StatusSummary";
 import OrderCard from "../components/OrderCard";
-import { Calendar, Clock, Check, FileText, ArrowRight } from "lucide-react";
+import { Calendar, Clock, Check, FileText, ArrowRight, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Card, CardContent } from "@/components/ui/card";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 
 // Type definition for orders
 type Order = {
@@ -120,25 +122,15 @@ const Index = () => {
 
   return (
     <Layout>
-      <div className="silai-container">
-        <div className="mb-6">
-          <h1 className="text-xl font-bold mb-2">Welcome back!</h1>
-          <p className="text-gray-600">
-            {new Date().toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              day: 'numeric', 
-              month: 'long', 
-              year: 'numeric' 
-            })}
-          </p>
-        </div>
-
+      <div className="silai-container animate-fade-in">
+        <DashboardHeader />
+        
         {/* Status summaries */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           <StatusSummary 
-            title="Today's Orders" 
-            count={todaysOrders.length} 
-            icon={<Calendar size={20} className="text-silai-600" />} 
+            title="Total Orders" 
+            count={orderStats.total} 
+            icon={<TrendingUp size={20} className="text-silai-600" />} 
             color="border-silai-600"
           />
           <StatusSummary 
@@ -162,36 +154,49 @@ const Index = () => {
         </div>
         
         {/* Today's Orders */}
-        <div className="mb-4 flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Today's Orders</h2>
-          <Link to="/orders" className="text-silai-600 text-sm flex items-center">
-            View All <ArrowRight size={16} className="ml-1" />
-          </Link>
-        </div>
-        
-        {loading ? (
-          <div className="silai-card py-8 text-center">
-            <p className="text-gray-500">Loading orders...</p>
-          </div>
-        ) : todaysOrders.length > 0 ? (
-          todaysOrders.map(order => (
-            <OrderCard 
-              key={order.id}
-              id={order.id}
-              customerName={order.customer_name}
-              garmentType={order.garment_type}
-              dueDate={order.due_date}
-              status={order.status}
-            />
-          ))
-        ) : (
-          <div className="silai-card text-center py-6">
-            <p className="text-gray-500">No orders for today</p>
-            <Link to="/orders/new" className="text-silai-600 font-medium mt-2 inline-block">
-              Add new order
-            </Link>
-          </div>
-        )}
+        <Card className="mb-6 border-none shadow-md">
+          <CardContent className="p-0">
+            <div className="bg-gradient-to-r from-silai-50 to-silai-100 p-4 rounded-t-lg">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Calendar size={18} className="text-silai-700" />
+                  <h2 className="text-lg font-semibold text-silai-800">Today's Orders</h2>
+                </div>
+                <Link to="/orders" className="text-silai-600 text-sm font-medium flex items-center hover:text-silai-800 transition-colors">
+                  View All <ArrowRight size={16} className="ml-1" />
+                </Link>
+              </div>
+            </div>
+            
+            <div className="p-4">
+              {loading ? (
+                <div className="py-8 text-center">
+                  <p className="text-gray-500">Loading orders...</p>
+                </div>
+              ) : todaysOrders.length > 0 ? (
+                <div className="space-y-3">
+                  {todaysOrders.map(order => (
+                    <OrderCard 
+                      key={order.id}
+                      id={order.id}
+                      customerName={order.customer_name}
+                      garmentType={order.garment_type}
+                      dueDate={order.due_date}
+                      status={order.status}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 bg-gray-50 rounded-lg">
+                  <p className="text-gray-500 mb-2">No orders for today</p>
+                  <Link to="/orders/new" className="text-silai-600 font-medium hover:text-silai-800 transition-colors inline-block">
+                    Add new order
+                  </Link>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   );

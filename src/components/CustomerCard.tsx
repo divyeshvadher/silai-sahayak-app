@@ -1,6 +1,8 @@
 
 import { Link } from "react-router-dom";
-import { User } from "lucide-react";
+import { Phone, User } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface CustomerCardProps {
   id: string;
@@ -11,21 +13,28 @@ interface CustomerCardProps {
 
 const CustomerCard = ({ id, name, mobile, totalOrders }: CustomerCardProps) => {
   return (
-    <Link to={`/customers/${id}`}>
-      <div className="silai-card mb-3 flex items-center justify-between">
-        <div className="flex items-center">
-          <div className="h-10 w-10 bg-silai-100 rounded-full flex items-center justify-center text-silai-600 mr-3">
-            <User size={18} />
+    <Link to={`/customers/${id}`} className="block">
+      <Card className="mb-3 hover:shadow-md transition-all hover:-translate-y-1 duration-200">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="h-10 w-10 bg-silai-100 rounded-full flex items-center justify-center text-silai-600 mr-3 shadow-sm">
+                <User size={18} />
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-800">{name}</h3>
+                <div className="flex items-center text-sm text-gray-500">
+                  <Phone size={14} className="mr-1" />
+                  {mobile}
+                </div>
+              </div>
+            </div>
+            <Badge className="bg-silai-100 text-silai-700 hover:bg-silai-200 transition-colors" variant="outline">
+              {totalOrders} {totalOrders === 1 ? 'order' : 'orders'}
+            </Badge>
           </div>
-          <div>
-            <h3 className="font-medium text-gray-800">{name}</h3>
-            <p className="text-sm text-gray-500">{mobile}</p>
-          </div>
-        </div>
-        <div className="bg-silai-50 text-silai-600 px-2 py-1 rounded text-xs">
-          {totalOrders} order{totalOrders !== 1 ? 's' : ''}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </Link>
   );
 };

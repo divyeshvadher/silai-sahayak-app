@@ -1,58 +1,91 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import OrderCard from "../components/OrderCard";
 import { Button } from "@/components/ui/button";
 import { Search, Plus, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
-// Placeholder data
-const mockOrders = [
-  {
-    id: "1",
-    customerName: "Priya Sharma",
-    garmentType: "Anarkali Suit",
-    dueDate: "2025-05-02",
-    status: "in-progress" as const,
-  },
-  {
-    id: "2",
-    customerName: "Amit Patel",
-    garmentType: "Wedding Sherwani",
-    dueDate: "2025-05-10", 
-    status: "pending" as const,
-  },
-  {
-    id: "3",
-    customerName: "Meera Khanna",
-    garmentType: "Blouse",
-    dueDate: "2025-04-30",
-    status: "completed" as const,
-  },
-  {
-    id: "4",
-    customerName: "Raj Malhotra",
-    garmentType: "Business Suit",
-    dueDate: "2025-05-15",
-    status: "pending" as const,
-  },
-  {
-    id: "5",
-    customerName: "Ananya Singh",
-    garmentType: "Lehenga",
-    dueDate: "2025-06-01",
-    status: "delivered" as const,
-  }
-];
+// Type definition for orders
+type Order = {
+  id: string;
+  customer_name: string;
+  garment_type: string;
+  due_date: string;
+  status: "pending" | "in-progress" | "completed" | "delivered";
+};
 
 const Orders = () => {
-  const [orders] = useState(mockOrders);
+  const { user } = useAuth();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   
+  // Fetch orders from Supabase when component mounts
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("orders")
+          .select("*")
+          .order("due_date", { ascending: true });
+          
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          setOrders(data);
+        }
+      } catch (error: any) {
+        toast.error(`Error loading orders: ${error.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchOrders();
+    
+    // Set up a real-time subscription
+    const channel = supabase
+      .channel('public:orders')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'orders' }, 
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setOrders(prevOrders => [...prevOrders, payload.new as Order]);
+          } else if (payload.eventType === 'UPDATE') {
+            setOrders(prevOrders => 
+              prevOrders.map(order => 
+                order.id === payload.new.id ? payload.new as Order : order
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setOrders(prevOrders => 
+              prevOrders.filter(order => order.id !== payload.old.id)
+            );
+          }
+        }
+      )
+      .subscribe();
+    
+    // Cleanup subscription
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  // Filter orders based on search query
   const filteredOrders = orders.filter(order => 
-    order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.garmentType.toLowerCase().includes(searchQuery.toLowerCase())
+    order.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    order.garment_type.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -82,14 +115,18 @@ const Orders = () => {
         </div>
         
         {/* Orders list */}
-        {filteredOrders.length > 0 ? (
+        {loading ? (
+          <div className="silai-card py-8 text-center">
+            <p className="text-gray-500">Loading orders...</p>
+          </div>
+        ) : filteredOrders.length > 0 ? (
           filteredOrders.map(order => (
             <OrderCard
               key={order.id}
               id={order.id}
-              customerName={order.customerName}
-              garmentType={order.garmentType}
-              dueDate={order.dueDate}
+              customerName={order.customer_name}
+              garmentType={order.garment_type}
+              dueDate={order.due_date}
               status={order.status}
             />
           ))

@@ -95,17 +95,19 @@ export const EditOrderDialog = ({
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setEditedOrder(prev => ({
-      ...prev,
+    // Fix: Don't use functional updates here since we're expecting a direct object
+    setEditedOrder({
+      ...editedOrder,
       [name]: value
-    }));
+    });
   };
   
   const handleSelectChange = (name: string, value: string) => {
-    setEditedOrder(prev => ({
-      ...prev,
+    // Fix: Don't use functional updates here since we're expecting a direct object
+    setEditedOrder({
+      ...editedOrder,
       [name]: value
-    }));
+    });
   };
 
   return (

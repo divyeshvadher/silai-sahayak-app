@@ -26,6 +26,14 @@ type OrderStats = {
   completed: number;
 };
 
+// Helper function to validate order status
+const validateOrderStatus = (status: string): "pending" | "in-progress" | "completed" | "delivered" => {
+  if (status === "pending" || status === "in-progress" || status === "completed" || status === "delivered") {
+    return status as "pending" | "in-progress" | "completed" | "delivered";
+  }
+  return "pending"; // Default fallback
+};
+
 const Index = () => {
   const { user } = useAuth();
   const [todaysOrders, setTodaysOrders] = useState<Order[]>([]);
@@ -70,17 +78,15 @@ const Index = () => {
           
           setOrderStats(stats);
           
-          // Filter today's orders
-          const todaysOrdersData = allOrdersData.filter(order => order.due_date === today)
+          // Filter today's orders and ensure proper status type
+          const todaysOrdersData = allOrdersData
+            .filter(order => order.due_date === today)
             .map(order => ({
               id: order.id,
               customer_name: order.customer_name,
               garment_type: order.garment_type,
               due_date: order.due_date,
-              status: (order.status === "pending" || order.status === "in-progress" || 
-                       order.status === "completed" || order.status === "delivered") 
-                ? order.status
-                : "pending"
+              status: validateOrderStatus(order.status)
             }));
           
           setTodaysOrders(todaysOrdersData);

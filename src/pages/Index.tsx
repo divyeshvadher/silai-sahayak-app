@@ -1,59 +1,137 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import StatusSummary from "../components/StatusSummary";
 import OrderCard from "../components/OrderCard";
 import { Calendar, Clock, Check, FileText, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
-// Placeholder data
-const mockOrders = [
-  {
-    id: "1",
-    customerName: "Priya Sharma",
-    garmentType: "Anarkali Suit",
-    dueDate: "2025-05-02",
-    status: "in-progress" as const,
-  },
-  {
-    id: "2",
-    customerName: "Amit Patel",
-    garmentType: "Wedding Sherwani",
-    dueDate: "2025-05-10", 
-    status: "pending" as const,
-  },
-  {
-    id: "3",
-    customerName: "Meera Khanna",
-    garmentType: "Blouse",
-    dueDate: "2025-04-30",
-    status: "pending" as const,
-  }
-];
+// Type definition for orders
+type Order = {
+  id: string;
+  customer_name: string;
+  garment_type: string;
+  due_date: string;
+  status: "pending" | "in-progress" | "completed" | "delivered";
+};
+
+// Type for order statistics
+type OrderStats = {
+  total: number;
+  pending: number;
+  inProgress: number;
+  completed: number;
+};
 
 const Index = () => {
-  const [todaysOrders] = useState(mockOrders);
+  const { user } = useAuth();
+  const [todaysOrders, setTodaysOrders] = useState<Order[]>([]);
+  const [orderStats, setOrderStats] = useState<OrderStats>({
+    total: 0,
+    pending: 0,
+    inProgress: 0,
+    completed: 0
+  });
+  const [loading, setLoading] = useState(true);
   
-  const orderStats = {
-    total: 12,
-    pending: 5,
-    inProgress: 4,
-    completed: 3
-  };
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Fetch orders and statistics
+  useEffect(() => {
+    const fetchOrdersAndStats = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        
+        // Fetch all orders to calculate statistics
+        const { data: allOrdersData, error: allOrdersError } = await supabase
+          .from("orders")
+          .select("*");
+          
+        if (allOrdersError) {
+          throw allOrdersError;
+        }
+        
+        if (allOrdersData) {
+          // Calculate order statistics
+          const stats: OrderStats = {
+            total: allOrdersData.length,
+            pending: allOrdersData.filter(order => order.status === "pending").length,
+            inProgress: allOrdersData.filter(order => order.status === "in-progress").length,
+            completed: allOrdersData.filter(order => 
+              order.status === "completed" || order.status === "delivered"
+            ).length
+          };
+          
+          setOrderStats(stats);
+          
+          // Filter today's orders
+          const todaysOrdersData = allOrdersData.filter(order => order.due_date === today)
+            .map(order => ({
+              id: order.id,
+              customer_name: order.customer_name,
+              garment_type: order.garment_type,
+              due_date: order.due_date,
+              status: (order.status === "pending" || order.status === "in-progress" || 
+                       order.status === "completed" || order.status === "delivered") 
+                ? order.status
+                : "pending"
+            }));
+          
+          setTodaysOrders(todaysOrdersData);
+        }
+      } catch (error: any) {
+        toast.error(`Error loading orders: ${error.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchOrdersAndStats();
+    
+    // Set up a real-time subscription
+    const channel = supabase
+      .channel('public:orders')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'orders' }, 
+        () => {
+          // When any order changes, refresh the data
+          fetchOrdersAndStats();
+        }
+      )
+      .subscribe();
+    
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, today]);
 
   return (
     <Layout>
       <div className="silai-container">
         <div className="mb-6">
           <h1 className="text-xl font-bold mb-2">Welcome back!</h1>
-          <p className="text-gray-600">Tuesday, 29 April 2025</p>
+          <p className="text-gray-600">
+            {new Date().toLocaleDateString('en-US', { 
+              weekday: 'long', 
+              day: 'numeric', 
+              month: 'long', 
+              year: 'numeric' 
+            })}
+          </p>
         </div>
 
         {/* Status summaries */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <StatusSummary 
             title="Today's Orders" 
-            count={3} 
+            count={todaysOrders.length} 
             icon={<Calendar size={20} className="text-silai-600" />} 
             color="border-silai-600"
           />
@@ -85,14 +163,18 @@ const Index = () => {
           </Link>
         </div>
         
-        {todaysOrders.length > 0 ? (
+        {loading ? (
+          <div className="silai-card py-8 text-center">
+            <p className="text-gray-500">Loading orders...</p>
+          </div>
+        ) : todaysOrders.length > 0 ? (
           todaysOrders.map(order => (
             <OrderCard 
               key={order.id}
               id={order.id}
-              customerName={order.customerName}
-              garmentType={order.garmentType}
-              dueDate={order.dueDate}
+              customerName={order.customer_name}
+              garmentType={order.garment_type}
+              dueDate={order.due_date}
               status={order.status}
             />
           ))

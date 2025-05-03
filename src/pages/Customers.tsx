@@ -1,44 +1,98 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import CustomerCard from "../components/CustomerCard";
 import { Button } from "@/components/ui/button";
 import { Search, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
-// Placeholder data
-const mockCustomers = [
-  {
-    id: "1",
-    name: "Priya Sharma",
-    mobile: "9876543210",
-    totalOrders: 5
-  },
-  {
-    id: "2",
-    name: "Amit Patel",
-    mobile: "8765432109",
-    totalOrders: 2
-  },
-  {
-    id: "3",
-    name: "Meera Khanna",
-    mobile: "7654321098",
-    totalOrders: 7
-  },
-  {
-    id: "4",
-    name: "Raj Malhotra",
-    mobile: "6543210987",
-    totalOrders: 1
-  }
-];
+// Type definition for customers
+type Customer = {
+  id: string;
+  name: string;
+  mobile: string;
+  totalOrders: number;
+};
 
 const Customers = () => {
-  const [customers] = useState(mockCustomers);
+  const { user } = useAuth();
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   
+  // Fetch customers data from orders table (grouping by customer_name)
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        
+        // Get orders grouped by customer_name
+        const { data, error } = await supabase
+          .from("orders")
+          .select("customer_name, phone_number, id");
+          
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          // Process data to create customer list with order counts
+          const customersMap = new Map<string, Customer>();
+          
+          data.forEach((order) => {
+            const name = order.customer_name;
+            const mobile = order.phone_number || "";
+            
+            if (customersMap.has(name)) {
+              // Increment order count for existing customer
+              const existingCustomer = customersMap.get(name)!;
+              existingCustomer.totalOrders += 1;
+            } else {
+              // Create new customer entry
+              customersMap.set(name, {
+                id: order.id, // Using first order ID as customer ID (simplified approach)
+                name,
+                mobile,
+                totalOrders: 1
+              });
+            }
+          });
+          
+          setCustomers(Array.from(customersMap.values()));
+        }
+      } catch (error: any) {
+        toast.error(`Error loading customers: ${error.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCustomers();
+    
+    // Set up a real-time subscription to orders table
+    const channel = supabase
+      .channel('public:orders')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'orders' }, 
+        () => {
+          // When any order changes, refresh the customer list
+          fetchCustomers();
+        }
+      )
+      .subscribe();
+    
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   const filteredCustomers = customers.filter(customer => 
     customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     customer.mobile.includes(searchQuery)
@@ -68,7 +122,11 @@ const Customers = () => {
         </div>
         
         {/* Customers list */}
-        {filteredCustomers.length > 0 ? (
+        {loading ? (
+          <div className="silai-card py-8 text-center">
+            <p className="text-gray-500">Loading customers...</p>
+          </div>
+        ) : filteredCustomers.length > 0 ? (
           filteredCustomers.map(customer => (
             <CustomerCard
               key={customer.id}

@@ -2,7 +2,10 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "./ui/button";
-import { LogOut, Home, Users, ShoppingBag, Palette, Menu, UserRound } from "lucide-react";
+import { 
+  LogOut, Home, Users, ShoppingBag, Palette, Menu, UserRound,
+  Ruler, Package, Wallet, Settings, AlertCircle
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -11,7 +14,10 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarFooter
+  SidebarFooter,
+  SidebarSeparator,
+  SidebarGroup,
+  SidebarGroupLabel
 } from "./ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -24,11 +30,18 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
   const { signOut, profile } = useAuth();
   const isMobile = useIsMobile();
 
-  const navItems = [
+  const mainNavItems = [
     { path: "/", icon: <Home className="w-5 h-5" />, label: "Home" },
     { path: "/customers", icon: <Users className="w-5 h-5" />, label: "Customers" },
     { path: "/orders", icon: <ShoppingBag className="w-5 h-5" />, label: "Orders" },
     { path: "/designs", icon: <Palette className="w-5 h-5" />, label: "Designs" },
+  ];
+  
+  const comingSoonNavItems = [
+    { path: "/measurements", icon: <Ruler className="w-5 h-5" />, label: "Measurements", comingSoon: true },
+    { path: "/inventory", icon: <Package className="w-5 h-5" />, label: "Inventory", comingSoon: true },
+    { path: "/expenses", icon: <Wallet className="w-5 h-5" />, label: "Expenses", comingSoon: true },
+    { path: "/settings", icon: <Settings className="w-5 h-5" />, label: "Settings", comingSoon: true },
   ];
 
   return (
@@ -45,22 +58,51 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
             </div>
             
             <div className="flex-1">
-              <SidebarMenu>
-                {navItems.map((item) => (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton 
-                      asChild 
-                      tooltip={item.label}
-                      isActive={window.location.pathname === item.path}
-                    >
-                      <Link to={item.path} className="flex items-center gap-2">
-                        {item.icon}
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
+              <SidebarGroup>
+                <SidebarGroupLabel>Main Navigation</SidebarGroupLabel>
+                <SidebarMenu>
+                  {mainNavItems.map((item) => (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton 
+                        asChild 
+                        tooltip={item.label}
+                        isActive={window.location.pathname === item.path}
+                      >
+                        <Link to={item.path} className="flex items-center gap-2">
+                          {item.icon}
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroup>
+              
+              <SidebarSeparator className="my-4" />
+              
+              <SidebarGroup>
+                <SidebarGroupLabel>More Features</SidebarGroupLabel>
+                <SidebarMenu>
+                  {comingSoonNavItems.map((item) => (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton 
+                        asChild 
+                        tooltip={item.label}
+                        isActive={window.location.pathname === item.path}
+                        aria-disabled={item.comingSoon}
+                      >
+                        <div className="flex items-center gap-2 relative cursor-default">
+                          {item.icon}
+                          <span>{item.label}</span>
+                          {item.comingSoon && (
+                            <span className="absolute right-1 top-1 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">Soon</span>
+                          )}
+                        </div>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroup>
             </div>
 
             {/* User profile section */}
@@ -111,7 +153,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
           
           {/* Mobile Bottom Navigation */}
           <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center z-10">
-            {navItems.map((item) => {
+            {mainNavItems.map((item) => {
               const isActive = window.location.pathname === item.path;
               return (
                 <Link 

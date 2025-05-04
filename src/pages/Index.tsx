@@ -3,12 +3,12 @@ import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import StatusSummary from "../components/StatusSummary";
 import OrderCard from "../components/OrderCard";
-import { Calendar, Clock, Check, FileText, ArrowRight, TrendingUp } from "lucide-react";
+import { Calendar, Clock, Check, FileText, ArrowRight, TrendingUp, Users, Wallet, Brain, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 
 // Type definition for orders
@@ -45,6 +45,8 @@ const Index = () => {
     inProgress: 0,
     completed: 0
   });
+  const [customerCount, setCustomerCount] = useState<number>(0);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   
   // Get today's date in YYYY-MM-DD format
@@ -92,9 +94,26 @@ const Index = () => {
             }));
           
           setTodaysOrders(todaysOrdersData);
+          
+          // Calculate monthly revenue (mock data for demo)
+          const revenue = allOrdersData.reduce((sum, order) => sum + (order.total_amount || 0), 0);
+          setMonthlyRevenue(revenue);
+        }
+        
+        // Fetch customer count
+        const { count: customerCountData, error: customerCountError } = await supabase
+          .from("customers")
+          .select("*", { count: "exact", head: true });
+          
+        if (customerCountError) {
+          throw customerCountError;
+        }
+        
+        if (customerCountData !== null) {
+          setCustomerCount(customerCountData);
         }
       } catch (error: any) {
-        toast.error(`Error loading orders: ${error.message}`);
+        toast.error(`Error loading dashboard data: ${error.message}`);
       } finally {
         setLoading(false);
       }
@@ -132,6 +151,7 @@ const Index = () => {
             count={orderStats.total} 
             icon={<TrendingUp size={20} className="text-silai-600" />} 
             color="border-silai-600"
+            trend={{ percentage: 12, isPositive: true }}
           />
           <StatusSummary 
             title="Pending" 
@@ -150,8 +170,57 @@ const Index = () => {
             count={orderStats.completed} 
             icon={<Check size={20} className="text-jade-500" />} 
             color="border-jade-500"
+            trend={{ percentage: 8, isPositive: true }}
           />
         </div>
+        
+        {/* Additional Status Summaries */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
+          <StatusSummary 
+            title="Total Customers" 
+            count={customerCount} 
+            icon={<Users size={20} className="text-purple-500" />} 
+            color="border-purple-500"
+            trend={{ percentage: 5, isPositive: true }}
+          />
+          <StatusSummary 
+            title="Monthly Revenue" 
+            count={`₹${monthlyRevenue.toLocaleString()}`} 
+            icon={<Wallet size={20} className="text-emerald-500" />} 
+            color="border-emerald-500"
+            trend={{ percentage: 15, isPositive: true }}
+          />
+        </div>
+
+        {/* Coming Soon AI Features */}
+        <Card className="mb-6 border-none shadow-md bg-gradient-to-r from-silai-50 to-silai-100">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg text-silai-800 flex items-center">
+                  <Brain size={18} className="mr-2 text-silai-600" />
+                  Coming Soon: AI Features
+                </CardTitle>
+                <CardDescription>
+                  Smart tools to enhance your tailoring experience
+                </CardDescription>
+              </div>
+              <Sparkles className="h-5 w-5 text-silai-600 animate-pulse" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="bg-white p-3 rounded-lg border border-silai-200">
+                <h4 className="font-medium text-silai-700 mb-1">Auto Measurement Detection</h4>
+                <p className="text-sm text-gray-600">Scan your client's measurements from photos using AI</p>
+              </div>
+              <div className="bg-white p-3 rounded-lg border border-silai-200">
+                <h4 className="font-medium text-silai-700 mb-1">Design Suggestions</h4>
+                <p className="text-sm text-gray-600">Get AI-generated design ideas based on customer preferences</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         
         {/* Today's Orders */}
         <Card className="mb-6 border-none shadow-md">

@@ -95,22 +95,13 @@ const Index = () => {
           
           setTodaysOrders(todaysOrdersData);
           
-          // Calculate monthly revenue (mock data for demo)
-          const revenue = allOrdersData.reduce((sum, order) => sum + (order.total_amount || 0), 0);
+          // Calculate monthly revenue (from the price field)
+          const revenue = allOrdersData.reduce((sum, order) => sum + (order.price || 0), 0);
           setMonthlyRevenue(revenue);
-        }
-        
-        // Fetch customer count
-        const { count: customerCountData, error: customerCountError } = await supabase
-          .from("customers")
-          .select("*", { count: "exact", head: true });
           
-        if (customerCountError) {
-          throw customerCountError;
-        }
-        
-        if (customerCountData !== null) {
-          setCustomerCount(customerCountData);
+          // Calculate unique customer count by extracting unique customer names from orders
+          const uniqueCustomers = new Set(allOrdersData.map(order => order.customer_name));
+          setCustomerCount(uniqueCustomers.size);
         }
       } catch (error: any) {
         toast.error(`Error loading dashboard data: ${error.message}`);

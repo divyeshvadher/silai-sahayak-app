@@ -1,12 +1,12 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Scissors, ShieldCheck, Shirt, Ruler, PenTool, MoveRight, Mail, Phone, MapPin, Instagram, Facebook, Twitter, Linkedin, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 const Homepage = () => {
+  const navigate = useNavigate();
   const [contactForm, setContactForm] = useState({
     name: "",
     email: "",
@@ -28,6 +28,10 @@ const Homepage = () => {
     setContactForm({ name: "", email: "", message: "" });
   };
 
+  const handleLogin = () => {
+    navigate("/auth");
+  };
+
   return (
     <div className="bg-gray-950 text-white min-h-screen">
       {/* Navigation */}
@@ -37,11 +41,12 @@ const Homepage = () => {
           <span className="text-2xl font-bold text-white">Silai Sahayak</span>
         </div>
         <div>
-          <Link to="/auth">
-            <Button className="bg-silai-600 hover:bg-silai-700 text-white">
-              Login
-            </Button>
-          </Link>
+          <Button 
+            className="bg-silai-600 hover:bg-silai-700 text-white"
+            onClick={handleLogin}
+          >
+            Login
+          </Button>
         </div>
       </nav>
 
@@ -57,11 +62,13 @@ const Homepage = () => {
               Perfect fit, guaranteed.
             </p>
             <div className="pt-4">
-              <Link to="/auth">
-                <Button size="lg" className="bg-silai-600 hover:bg-silai-700 text-white rounded-md px-8">
-                  Get Started <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
+              <Button 
+                size="lg" 
+                className="bg-silai-600 hover:bg-silai-700 text-white rounded-md px-8"
+                onClick={handleLogin}
+              >
+                Get Started <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
             </div>
           </div>
           <div className="flex justify-center lg:justify-end animate-scale-in">

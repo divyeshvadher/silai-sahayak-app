@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "./ui/button";
 import { 
-  LogOut, Home, Users, ShoppingBag, Palette, Menu, UserRound,
-  Ruler, Package, Wallet, Settings, AlertCircle
+  LogOut, ShoppingBag, Ruler, Package, Wallet, Settings, UserRound,
+  Menu, CreditCard
 } from "lucide-react";
 import {
   Sidebar,
@@ -16,8 +16,6 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarSeparator,
-  SidebarGroup,
-  SidebarGroupLabel
 } from "./ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -31,17 +29,11 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
   const isMobile = useIsMobile();
 
   const mainNavItems = [
-    { path: "/", icon: <Home className="w-5 h-5" />, label: "Home" },
-    { path: "/customers", icon: <Users className="w-5 h-5" />, label: "Customers" },
-    { path: "/orders", icon: <ShoppingBag className="w-5 h-5" />, label: "Orders" },
-    { path: "/designs", icon: <Palette className="w-5 h-5" />, label: "Designs" },
-  ];
-  
-  const comingSoonNavItems = [
-    { path: "/measurements", icon: <Ruler className="w-5 h-5" />, label: "Measurements", comingSoon: true },
-    { path: "/inventory", icon: <Package className="w-5 h-5" />, label: "Inventory", comingSoon: true },
-    { path: "/expenses", icon: <Wallet className="w-5 h-5" />, label: "Expenses", comingSoon: true },
-    { path: "/settings", icon: <Settings className="w-5 h-5" />, label: "Settings", comingSoon: true },
+    { path: "/profile", icon: <UserRound className="w-5 h-5" />, label: "My Profile" },
+    { path: "/orders", icon: <ShoppingBag className="w-5 h-5" />, label: "My Orders" },
+    { path: "/measurements", icon: <Ruler className="w-5 h-5" />, label: "My Measurements" },
+    { path: "/payment", icon: <CreditCard className="w-5 h-5" />, label: "Payment Methods" },
+    { path: "/settings", icon: <Settings className="w-5 h-5" />, label: "Account Settings" },
   ];
 
   return (
@@ -49,99 +41,68 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
       <div className="min-h-screen w-full flex">
         {/* Desktop Sidebar */}
         <Sidebar>
-          <SidebarContent className="flex flex-col h-full">
-            <div className="p-4 mb-4">
+          <SidebarContent className="flex flex-col h-full bg-[hsl(var(--silai-sidebar))]">
+            <div className="p-4 mb-4 border-b border-gray-800">
               <Link to="/" className="flex items-center gap-2">
-                <img src="/logo.svg" alt="Silai Sahayak Logo" className="w-8 h-8" />
+                <img src="/logo.svg" alt="Silai Sahayak Logo" className="w-6 h-6" />
                 <h1 className="text-xl font-bold">Silai Sahayak</h1>
               </Link>
             </div>
             
+            <div className="px-4 py-2 mb-2">
+              <p className="text-sm text-gray-400">Welcome back</p>
+              <p className="text-sm text-gray-300 truncate">{profile?.email || ''}</p>
+            </div>
+            
             <div className="flex-1">
-              <SidebarGroup>
-                <SidebarGroupLabel>Main Navigation</SidebarGroupLabel>
-                <SidebarMenu>
-                  {mainNavItems.map((item) => (
+              <SidebarMenu>
+                {mainNavItems.map((item) => {
+                  const isActive = window.location.pathname === item.path;
+                  return (
                     <SidebarMenuItem key={item.path}>
                       <SidebarMenuButton 
                         asChild 
                         tooltip={item.label}
-                        isActive={window.location.pathname === item.path}
+                        isActive={isActive}
+                        className={`${isActive ? 'bg-gray-800' : ''} w-full`}
                       >
-                        <Link to={item.path} className="flex items-center gap-2">
+                        <Link to={item.path} className="flex items-center gap-4 px-2 py-2 w-full">
                           {item.icon}
                           <span>{item.label}</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroup>
-              
-              <SidebarSeparator className="my-4" />
-              
-              <SidebarGroup>
-                <SidebarGroupLabel>More Features</SidebarGroupLabel>
-                <SidebarMenu>
-                  {comingSoonNavItems.map((item) => (
-                    <SidebarMenuItem key={item.path}>
-                      <SidebarMenuButton 
-                        asChild 
-                        tooltip={item.label}
-                        isActive={window.location.pathname === item.path}
-                        aria-disabled={item.comingSoon}
-                      >
-                        <div className="flex items-center gap-2 relative cursor-default">
-                          {item.icon}
-                          <span>{item.label}</span>
-                          {item.comingSoon && (
-                            <span className="absolute right-1 top-1 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">Soon</span>
-                          )}
-                        </div>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroup>
+                  );
+                })}
+              </SidebarMenu>
             </div>
 
-            {/* User profile section */}
-            {profile && (
-              <SidebarFooter>
-                <div className="border-t border-gray-200 pt-4 mt-4 p-4">
-                  <Link to="/profile" className="flex items-center mb-3 hover:bg-gray-100 rounded-md p-2 transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-silai-600 text-white flex items-center justify-center mr-2">
-                      {profile.full_name ? profile.full_name[0] : <UserRound className="w-4 h-4" />}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">{profile.full_name || 'User'}</p>
-                      <p className="text-xs text-gray-500">{profile.phone_number}</p>
-                    </div>
-                  </Link>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
-                    onClick={signOut}
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </Button>
-                </div>
-              </SidebarFooter>
-            )}
+            <SidebarFooter>
+              <SidebarSeparator className="my-2" />
+              <div className="p-4">
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start text-gray-300 hover:bg-gray-800 hover:text-white"
+                  onClick={signOut}
+                >
+                  <LogOut className="w-4 h-4 mr-4" />
+                  Log out
+                </Button>
+              </div>
+            </SidebarFooter>
           </SidebarContent>
         </Sidebar>
         
-        <div className="flex-1 flex flex-col overflow-auto">
+        <div className="flex-1 flex flex-col overflow-auto bg-[hsl(var(--silai-main))]">
           {/* Mobile Header */}
-          <div className="bg-white border-b p-4 flex items-center md:hidden">
+          <div className="bg-[hsl(var(--silai-sidebar))] border-b border-gray-800 p-4 flex items-center md:hidden">
             <SidebarTrigger className="mr-2">
               <Menu className="w-5 h-5" />
             </SidebarTrigger>
             <div className="flex-1 text-center">
               <h1 className="text-xl font-bold">Silai Sahayak</h1>
             </div>
-            <Link to="/profile" className="w-8 h-8 rounded-full bg-silai-600 text-white flex items-center justify-center">
+            <Link to="/profile" className="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center">
               {profile?.full_name ? profile.full_name[0] : <UserRound className="w-4 h-4" />}
             </Link>
           </div>
@@ -152,15 +113,15 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
           </main>
           
           {/* Mobile Bottom Navigation */}
-          <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center z-10">
-            {mainNavItems.map((item) => {
+          <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[hsl(var(--silai-sidebar))] border-t border-gray-800 flex justify-around items-center z-10">
+            {mainNavItems.slice(0, 4).map((item) => {
               const isActive = window.location.pathname === item.path;
               return (
                 <Link 
                   key={item.path} 
                   to={item.path} 
                   className={`flex flex-col items-center py-3 px-2 flex-1 ${
-                    isActive ? "text-silai-600" : "text-gray-500"
+                    isActive ? "text-primary" : "text-gray-400"
                   }`}
                 >
                   {item.icon}

@@ -1,5 +1,5 @@
 
-import { TrendingUp, Clock, FileText, Check } from "lucide-react";
+import { TrendingUp, Clock, Package, Check } from "lucide-react";
 import StatusSummary from "../StatusSummary";
 import { OrderStats as OrderStatsType } from "@/types/dashboard";
 
@@ -13,8 +13,8 @@ const OrderStats = ({ orderStats }: OrderStatsProps) => {
       <StatusSummary 
         title="Total Orders" 
         count={orderStats.total} 
-        icon={<TrendingUp size={20} className="text-silai-600" />} 
-        color="border-silai-600"
+        icon={<TrendingUp size={20} className="text-primary" />} 
+        color="border-primary"
         trend={{ percentage: 12, isPositive: true }}
       />
       <StatusSummary 
@@ -26,14 +26,14 @@ const OrderStats = ({ orderStats }: OrderStatsProps) => {
       <StatusSummary 
         title="In Progress" 
         count={orderStats.inProgress} 
-        icon={<FileText size={20} className="text-blue-500" />} 
-        color="border-blue-500"
+        icon={<Package size={20} className="text-accent" />} 
+        color="border-accent"
       />
       <StatusSummary 
         title="Completed" 
         count={orderStats.completed} 
-        icon={<Check size={20} className="text-jade-500" />} 
-        color="border-jade-500"
+        icon={<Check size={20} className="text-[hsl(var(--silai-highlight))]" />} 
+        color="border-[hsl(var(--silai-highlight))]"
         trend={{ percentage: 8, isPositive: true }}
       />
     </div>

@@ -1,10 +1,10 @@
 
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "./ui/button";
 import { 
-  LogOut, ShoppingBag, Ruler, Package, Wallet, Settings, UserRound,
-  Menu, CreditCard
+  LogOut, LayoutDashboard, Users, Package, Settings, UserRound,
+  Menu, PlusSquare, Sparkles
 } from "lucide-react";
 import {
   Sidebar,
@@ -16,8 +16,10 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarSeparator,
+  SidebarHeader,
 } from "./ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -27,14 +29,20 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, title }) => {
   const { signOut, profile } = useAuth();
   const isMobile = useIsMobile();
+  const location = useLocation();
 
   const mainNavItems = [
+    { path: "/dashboard", icon: <LayoutDashboard className="w-5 h-5" />, label: "Dashboard" },
+    { path: "/orders/new", icon: <PlusSquare className="w-5 h-5" />, label: "New Order" },
+    { path: "/customers", icon: <Users className="w-5 h-5" />, label: "Customer List" },
     { path: "/profile", icon: <UserRound className="w-5 h-5" />, label: "My Profile" },
-    { path: "/orders", icon: <ShoppingBag className="w-5 h-5" />, label: "My Orders" },
-    { path: "/measurements", icon: <Ruler className="w-5 h-5" />, label: "My Measurements" },
-    { path: "/payment", icon: <CreditCard className="w-5 h-5" />, label: "Payment Methods" },
-    { path: "/settings", icon: <Settings className="w-5 h-5" />, label: "Account Settings" },
+    { path: "/settings", icon: <Settings className="w-5 h-5" />, label: "Settings" },
   ];
+
+  const isActive = (path: string) => {
+    if (path === "/dashboard" && location.pathname === "/") return true;
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
 
   return (
     <SidebarProvider defaultOpen={!isMobile}>
@@ -42,29 +50,36 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
         {/* Desktop Sidebar */}
         <Sidebar>
           <SidebarContent className="flex flex-col h-full bg-[hsl(var(--silai-sidebar))]">
-            <div className="p-4 mb-4 border-b border-gray-800">
+            <SidebarHeader className="p-4 mb-2 border-b border-gray-800">
               <Link to="/" className="flex items-center gap-2">
-                <img src="/logo.svg" alt="Silai Sahayak Logo" className="w-6 h-6" />
-                <h1 className="text-xl font-bold">Silai Sahayak</h1>
+                <div className="w-8 h-8 rounded-md bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-blue-400 to-green-400">
+                  Silai Sahayak
+                </h1>
               </Link>
-            </div>
+            </SidebarHeader>
             
-            <div className="px-4 py-2 mb-2">
-              <p className="text-sm text-gray-400">Welcome back</p>
-              <p className="text-sm text-gray-300 truncate">{profile?.email || ''}</p>
+            <div className="px-4 py-2 mb-4">
+              <p className="text-sm text-gray-400">Welcome,</p>
+              <p className="text-sm text-gray-300 truncate font-medium">{profile?.full_name || 'Tailor'}</p>
             </div>
             
             <div className="flex-1">
               <SidebarMenu>
                 {mainNavItems.map((item) => {
-                  const isActive = window.location.pathname === item.path;
+                  const active = isActive(item.path);
                   return (
                     <SidebarMenuItem key={item.path}>
                       <SidebarMenuButton 
                         asChild 
                         tooltip={item.label}
-                        isActive={isActive}
-                        className={`${isActive ? 'bg-gray-800' : ''} w-full`}
+                        isActive={active}
+                        className={cn(
+                          "w-full transition-colors",
+                          active ? 'bg-gray-800' : ''
+                        )}
                       >
                         <Link to={item.path} className="flex items-center gap-4 px-2 py-2 w-full">
                           {item.icon}
@@ -82,7 +97,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
               <div className="p-4">
                 <Button 
                   variant="ghost" 
-                  className="w-full justify-start text-gray-300 hover:bg-gray-800 hover:text-white"
+                  className="w-full justify-start text-gray-300 hover:text-red-400 hover:bg-gray-800"
                   onClick={signOut}
                 >
                   <LogOut className="w-4 h-4 mr-4" />
@@ -99,29 +114,34 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
             <SidebarTrigger className="mr-2">
               <Menu className="w-5 h-5" />
             </SidebarTrigger>
-            <div className="flex-1 text-center">
-              <h1 className="text-xl font-bold">Silai Sahayak</h1>
+            <div className="flex-1 flex items-center justify-center">
+              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center mr-2">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-blue-400 to-green-400">
+                Silai Sahayak
+              </h1>
             </div>
             <Link to="/profile" className="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center">
-              {profile?.full_name ? profile.full_name[0] : <UserRound className="w-4 h-4" />}
+              {profile?.full_name ? profile.full_name[0].toUpperCase() : <UserRound className="w-4 h-4" />}
             </Link>
           </div>
           
           <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">
-            {title && <h1 className="text-2xl font-bold mb-4 hidden md:block">{title}</h1>}
+            {title && <h1 className="text-2xl font-bold mb-6 hidden md:block">{title}</h1>}
             {children}
           </main>
           
           {/* Mobile Bottom Navigation */}
           <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[hsl(var(--silai-sidebar))] border-t border-gray-800 flex justify-around items-center z-10">
             {mainNavItems.slice(0, 4).map((item) => {
-              const isActive = window.location.pathname === item.path;
+              const active = isActive(item.path);
               return (
                 <Link 
                   key={item.path} 
                   to={item.path} 
                   className={`flex flex-col items-center py-3 px-2 flex-1 ${
-                    isActive ? "text-primary" : "text-gray-400"
+                    active ? "text-primary" : "text-gray-400"
                   }`}
                 >
                   {item.icon}

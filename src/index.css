@@ -14,7 +14,8 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 255 91% 58%;
+    /* Royal Purple as primary */
+    --primary: 267 75% 60%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 240 3.7% 15.9%;
@@ -23,7 +24,8 @@
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
 
-    --accent: 240 3.7% 15.9%;
+    /* Electric Blue accent */
+    --accent: 220 98% 61%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84.2% 60.2%;
@@ -31,13 +33,17 @@
 
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 255 91% 58%;
+    --ring: 267 75% 60%;
 
     --radius: 0.5rem;
     
+    /* Dashboard specific colors */
     --silai-sidebar: 240 10% 3.9%;
     --silai-main: 240 10% 3.9%;
     --silai-card: 240 10% 5.9%;
+    
+    /* Neon Green for highlights */
+    --silai-highlight: 149 75% 58%;
   }
 }
 
@@ -65,5 +71,39 @@
   
   .silai-tab-active {
     @apply border-b-2 border-primary text-white;
+  }
+  
+  /* Gradient backgrounds */
+  .gradient-purple-blue {
+    @apply bg-gradient-to-r from-purple-600 to-blue-500;
+  }
+  
+  .gradient-blue-green {
+    @apply bg-gradient-to-r from-blue-500 to-green-400;
+  }
+  
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Card hover effects */
+  .hover-lift {
+    @apply transition-all duration-200;
+  }
+  
+  .hover-lift:hover {
+    @apply transform -translate-y-1 shadow-lg;
   }
 }

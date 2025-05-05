@@ -13,3 +13,12 @@ export type OrderStats = {
   inProgress: number;
   completed: number;
 };
+
+export type InventoryItem = {
+  id: number;
+  name: string;
+  type: string;
+  quantity: number;
+  unit: string;
+  status: "In Stock" | "Low Stock" | "Out of Stock";
+};

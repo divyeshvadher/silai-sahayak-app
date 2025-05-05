@@ -18,6 +18,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthRedirect from "./components/AuthRedirect";
+import Inventory from "./pages/Inventory";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,7 @@ const AppContent = () => {
           <Route path="/orders/new" element={<ProtectedRoute><NewOrder /></ProtectedRoute>} />
           <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
           <Route path="/designs" element={<ProtectedRoute><Designs /></ProtectedRoute>} />
+          <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><UserEdit /></ProtectedRoute>} />
           <Route path="/payment" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Index /></ProtectedRoute>} />

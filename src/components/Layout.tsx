@@ -4,7 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { Button } from "./ui/button";
 import { 
   LogOut, LayoutDashboard, Users, Package, Settings, UserRound,
-  Menu, PlusSquare, Sparkles
+  Menu, PlusSquare, Sparkles, PackageOpen
 } from "lucide-react";
 import {
   Sidebar,
@@ -34,6 +34,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
   const mainNavItems = [
     { path: "/dashboard", icon: <LayoutDashboard className="w-5 h-5" />, label: "Dashboard" },
     { path: "/orders/new", icon: <PlusSquare className="w-5 h-5" />, label: "New Order" },
+    { path: "/inventory", icon: <PackageOpen className="w-5 h-5" />, label: "Inventory" },
     { path: "/customers", icon: <Users className="w-5 h-5" />, label: "Customer List" },
     { path: "/profile", icon: <UserRound className="w-5 h-5" />, label: "My Profile" },
     { path: "/settings", icon: <Settings className="w-5 h-5" />, label: "Settings" },

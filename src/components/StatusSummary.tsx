@@ -19,10 +19,12 @@ const StatusSummary = ({
   count, 
   icon, 
   color = "text-gray-600",
+  bgClass = "bg-white",
+  trend,
   subtitle
 }: StatusSummaryProps) => {
   return (
-    <Card className="overflow-hidden transition-all hover:shadow border">
+    <Card className={`overflow-hidden transition-all hover:shadow-md border ${bgClass}`}>
       <CardContent className="p-0">
         <div className="p-5">
           <div className="flex items-center mb-4">
@@ -33,7 +35,16 @@ const StatusSummary = ({
           </div>
           <div className="flex flex-col">
             <p className="text-2xl font-bold text-gray-800">{count}</p>
-            {subtitle && (
+            {trend && (
+              <div className="flex items-center mt-1">
+                <span className={`text-xs font-medium ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                  {trend.isPositive ? '+' : ''}
+                  {trend.percentage}%
+                </span>
+                <span className="ml-1 text-xs text-gray-500">from last month</span>
+              </div>
+            )}
+            {subtitle && !trend && (
               <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
             )}
           </div>

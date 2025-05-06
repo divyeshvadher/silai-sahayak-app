@@ -22,3 +22,16 @@ export type InventoryItem = {
   unit: string;
   status: "In Stock" | "Low Stock" | "Out of Stock";
 };
+
+export type CustomerMeasurement = {
+  id: string;
+  customer_id: string;
+  customer_name: string;
+  chest: number;
+  waist: number;
+  hips: number;
+  shoulder: number;
+  sleeve_length: number;
+  inseam: number;
+  updated_at: string;
+};

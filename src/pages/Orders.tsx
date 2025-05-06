@@ -5,7 +5,7 @@ import OrderCard from "../components/OrderCard";
 import { Button } from "@/components/ui/button";
 import { Search, Plus, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -30,6 +30,7 @@ type RawOrder = {
 };
 
 const Orders = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -130,10 +131,26 @@ const Orders = () => {
     order.garment_type.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleNewOrder = () => {
+    navigate("/orders/new");
+  };
+
   return (
     <Layout title="Orders">
-      <div className="silai-container">
-        {/* Search and Add buttons */}
+      <div className="animate-fade-in">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">Orders</h1>
+          <Button 
+            onClick={handleNewOrder}
+            className="bg-gray-900 hover:bg-gray-800"
+          >
+            <Plus size={18} className="mr-1" />
+            New Order
+          </Button>
+        </div>
+        
+        {/* Search and filter */}
         <div className="flex space-x-2 mb-4">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
@@ -148,36 +165,35 @@ const Orders = () => {
           <Button variant="outline" className="px-3">
             <Filter size={18} />
           </Button>
-          <Link to="/orders/new">
-            <Button className="bg-silai-600 hover:bg-silai-700">
-              <Plus size={18} className="mr-1" />
-              New
-            </Button>
-          </Link>
         </div>
         
         {/* Orders list */}
         {loading ? (
-          <div className="silai-card py-8 text-center">
+          <div className="py-8 text-center">
             <p className="text-gray-500">Loading orders...</p>
           </div>
         ) : filteredOrders.length > 0 ? (
-          filteredOrders.map(order => (
-            <OrderCard
-              key={order.id}
-              id={order.id}
-              customerName={order.customer_name}
-              garmentType={order.garment_type}
-              dueDate={order.due_date}
-              status={order.status}
-            />
-          ))
+          <div className="space-y-3">
+            {filteredOrders.map(order => (
+              <OrderCard
+                key={order.id}
+                id={order.id}
+                customerName={order.customer_name}
+                garmentType={order.garment_type}
+                dueDate={order.due_date}
+                status={order.status}
+              />
+            ))}
+          </div>
         ) : (
-          <div className="silai-card text-center py-6">
+          <div className="text-center py-6">
             <p className="text-gray-500">No orders found</p>
-            <Link to="/orders/new" className="text-silai-600 font-medium mt-2 inline-block">
-              Add new order
-            </Link>
+            <Button 
+              onClick={handleNewOrder}
+              className="mt-4 bg-gray-900 hover:bg-gray-800"
+            >
+              Create New Order
+            </Button>
           </div>
         )}
       </div>

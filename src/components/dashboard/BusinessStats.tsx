@@ -1,5 +1,5 @@
 
-import { Users, DollarSign, Package } from "lucide-react";
+import { Users, DollarSign, Package, ShoppingBag } from "lucide-react";
 import StatusSummary from "../StatusSummary";
 
 interface BusinessStatsProps {
@@ -13,26 +13,30 @@ const BusinessStats = ({ customerCount, monthlyRevenue }: BusinessStatsProps) =>
       <StatusSummary 
         title="Total Orders" 
         count={24} 
-        subtitle="+10% from last month"
-        icon={<Package size={20} className="text-gray-600" />} 
+        trend={{ percentage: 10, isPositive: true }}
+        icon={<ShoppingBag size={20} className="text-purple-600" />} 
+        color="text-purple-600 bg-purple-50" 
       />
       <StatusSummary 
         title="Total Customers" 
         count={customerCount} 
-        subtitle="+5% from last month"
-        icon={<Users size={20} className="text-gray-600" />} 
+        trend={{ percentage: 5, isPositive: true }}
+        icon={<Users size={20} className="text-blue-600" />} 
+        color="text-blue-600 bg-blue-50" 
       />
       <StatusSummary 
         title="Inventory Items" 
         count={18} 
         subtitle="3 items low in stock"
-        icon={<Package size={20} className="text-gray-600" />} 
+        icon={<Package size={20} className="text-amber-600" />} 
+        color="text-amber-600 bg-amber-50" 
       />
       <StatusSummary 
         title="Revenue" 
         count={`₹${monthlyRevenue.toLocaleString()}`}
-        subtitle="+12% from last month" 
-        icon={<DollarSign size={20} className="text-gray-600" />} 
+        trend={{ percentage: 12, isPositive: true }}
+        icon={<DollarSign size={20} className="text-green-600" />} 
+        color="text-green-600 bg-green-50" 
       />
     </div>
   );

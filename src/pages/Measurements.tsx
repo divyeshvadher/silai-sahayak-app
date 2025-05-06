@@ -15,17 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-
-type CustomerMeasurement = {
-  id: string;
-  customer_name: string;
-  chest: number;
-  waist: number;
-  hips: number;
-  shoulder: number;
-  sleeve_length: number;
-  updated_at: string;
-};
+import { CustomerMeasurement } from "@/types/dashboard";
 
 const Measurements = () => {
   const navigate = useNavigate();
@@ -37,13 +27,29 @@ const Measurements = () => {
     const fetchMeasurements = async () => {
       try {
         setLoading(true);
+        // Using the measurements table instead of customer_measurements
         const { data, error } = await supabase
-          .from("customer_measurements")
+          .from("measurements")
           .select("*")
           .order("customer_name", { ascending: true });
 
         if (error) throw error;
-        setMeasurements(data || []);
+        
+        // Transform the data to match CustomerMeasurement type if needed
+        const formattedData: CustomerMeasurement[] = data?.map(item => ({
+          id: item.id,
+          customer_id: item.customer_id || "",
+          customer_name: item.customer_name || "",
+          chest: Number(item.chest || 0),
+          waist: Number(item.waist || 0),
+          hips: Number(item.hips || 0),
+          shoulder: Number(item.shoulder || 0),
+          sleeve_length: Number(item.sleeve_length || 0),
+          inseam: Number(item.inseam || 0),
+          updated_at: item.updated_at || new Date().toISOString()
+        })) || [];
+        
+        setMeasurements(formattedData);
       } catch (error: any) {
         toast.error(`Error loading measurements: ${error.message}`);
       } finally {
@@ -55,10 +61,10 @@ const Measurements = () => {
 
     // Real-time subscription
     const channel = supabase
-      .channel("public:customer_measurements")
+      .channel("public:measurements")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "customer_measurements" },
+        { event: "*", schema: "public", table: "measurements" },
         (payload) => {
           fetchMeasurements(); // Refresh data on any change
         }

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Ruler } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { OrderHeader } from "@/components/orders/OrderHeader";
@@ -31,19 +31,11 @@ type OrderDetail = {
   updated_at: string;
 };
 
-type Measurement = {
-  name: string;
-  value: string;
-  unit: string;
-};
-
 const OrderDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [order, setOrder] = useState<OrderDetail | null>(null);
-  const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMeasurements, setLoadingMeasurements] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [editedOrder, setEditedOrder] = useState<Partial<OrderDetail>>({});
@@ -79,34 +71,11 @@ const OrderDetail = () => {
           setOrder(orderData);
           setEditedOrder(orderData);
           setNewStatus(orderData.status);
-          
-          // Fetch measurements for this order
-          fetchMeasurements(orderData.id);
         }
       } catch (error: any) {
         toast.error(`Error loading order details: ${error.message}`);
       } finally {
         setLoading(false);
-      }
-    };
-    
-    const fetchMeasurements = async (orderId: string) => {
-      try {
-        setLoadingMeasurements(true);
-        const { data, error } = await supabase
-          .from("measurements")
-          .select("*")
-          .eq("order_id", orderId);
-          
-        if (error) {
-          throw error;
-        }
-        
-        setMeasurements(data || []);
-      } catch (error: any) {
-        toast.error(`Error loading measurements: ${error.message}`);
-      } finally {
-        setLoadingMeasurements(false);
       }
     };
     
@@ -140,28 +109,6 @@ const OrderDetail = () => {
     });
   };
 
-  // Group measurements by type
-  const renderMeasurements = () => {
-    if (loadingMeasurements) {
-      return <p className="text-gray-500 text-center py-4">Loading measurements...</p>;
-    }
-    
-    if (measurements.length === 0) {
-      return <p className="text-gray-500 text-center py-4">No measurements recorded for this order</p>;
-    }
-    
-    return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-        {measurements.map((measurement, index) => (
-          <div key={index} className="bg-gray-50 p-3 rounded-md border">
-            <p className="text-sm font-medium text-gray-600">{measurement.name}</p>
-            <p className="text-lg font-semibold">{measurement.value} {measurement.unit}</p>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   return (
     <Layout title="Order Details">
       <div className="silai-container">
@@ -181,19 +128,6 @@ const OrderDetail = () => {
             
             {/* Garment details */}
             <GarmentDetails order={order} />
-            
-            {/* Customer Measurements */}
-            <div className="bg-white rounded-lg border shadow-sm">
-              <div className="px-5 py-4 border-b">
-                <div className="flex items-center">
-                  <Ruler className="h-5 w-5 mr-2 text-gray-500" />
-                  <h3 className="text-lg font-semibold">Customer Measurements</h3>
-                </div>
-              </div>
-              <div className="p-5">
-                {renderMeasurements()}
-              </div>
-            </div>
             
             {/* Payment details */}
             <PaymentDetails order={order} calculateBalance={calculateBalance} />

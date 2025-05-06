@@ -5,45 +5,44 @@
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
 
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
 
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
 
-    /* Vibrant Purple as primary */
-    --primary: 267 85% 65%;
-    --primary-foreground: 210 40% 98%;
+    /* Neutral dark color as primary */
+    --primary: 240 5% 25%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
 
-    /* Bright Cyan accent */
-    --accent: 180 100% 50%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 267 85% 65%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 240 5% 64.9%;
 
     --radius: 0.5rem;
     
     /* Dashboard specific colors */
-    --silai-sidebar: 260 15% 10%;
-    --silai-main: 240 15% 6%;
-    --silai-card: 240 15% 9%;
+    --silai-sidebar: 0 0% 98%;
+    --silai-main: 0 0% 100%;
+    --silai-card: 0 0% 100%;
     
-    /* Bright Teal for highlights */
-    --silai-highlight: 160 100% 60%;
+    /* Teal for highlights */
+    --silai-highlight: 166 76% 40%;
   }
 }
 
@@ -62,36 +61,15 @@
   }
 
   .silai-card {
-    @apply bg-[hsl(var(--silai-card))] rounded-lg shadow-md border border-gray-800 p-4;
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4;
   }
   
   .silai-tab {
-    @apply px-4 py-2 text-center transition-colors hover:bg-gray-800;
+    @apply px-4 py-2 text-center transition-colors hover:bg-gray-100;
   }
   
   .silai-tab-active {
-    @apply border-b-2 border-primary text-white;
-  }
-  
-  /* Gradient backgrounds */
-  .gradient-purple-blue {
-    @apply bg-gradient-to-r from-purple-600 to-cyan-500;
-  }
-  
-  .gradient-blue-green {
-    @apply bg-gradient-to-r from-cyan-500 to-emerald-400;
-  }
-  
-  .gradient-teal-cyan {
-    @apply bg-gradient-to-r from-teal-400 to-cyan-300;
-  }
-  
-  .gradient-purple-pink {
-    @apply bg-gradient-to-r from-purple-500 to-pink-400;
-  }
-
-  .card-glass {
-    @apply backdrop-blur-sm bg-white/5 border border-white/10;
+    @apply border-b-2 border-primary text-primary font-medium;
   }
   
   /* Animation utilities */
@@ -116,18 +94,6 @@
   }
   
   .hover-lift:hover {
-    @apply transform -translate-y-1 shadow-lg;
-  }
-  
-  .btn-glow {
-    @apply relative overflow-hidden;
-  }
-  
-  .btn-glow::after {
-    @apply content-[''] absolute top-0 left-[-100%] z-[-1] w-[200%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent transform transition-all duration-1000 ease-in-out;
-  }
-  
-  .btn-glow:hover::after {
-    @apply left-[100%];
+    @apply transform -translate-y-1 shadow;
   }
 }

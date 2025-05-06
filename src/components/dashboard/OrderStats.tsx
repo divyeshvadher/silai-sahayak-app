@@ -9,39 +9,34 @@ interface OrderStatsProps {
 
 const OrderStats = ({ orderStats }: OrderStatsProps) => {
   return (
-    <div className="space-y-4 mb-8">
-      <h2 className="text-xl font-semibold mb-4 text-white/90">Orders at a Glance</h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatusSummary 
-          title="Total Orders" 
-          count={orderStats.total} 
-          icon={<TrendingUp size={20} className="text-primary" />} 
-          color="border-primary"
-          trend={{ percentage: 12, isPositive: true }}
-          bgClass="from-purple-500/20 to-purple-700/20"
-        />
-        <StatusSummary 
-          title="Pending" 
-          count={orderStats.pending} 
-          icon={<Clock size={20} className="text-amber-400" />} 
-          color="border-amber-500"
-          bgClass="from-amber-500/20 to-amber-700/20"
-        />
-        <StatusSummary 
-          title="In Progress" 
-          count={orderStats.inProgress} 
-          icon={<Scissors size={20} className="text-cyan-400" />} 
-          color="border-cyan-500"
-          bgClass="from-cyan-500/20 to-cyan-700/20"
-        />
-        <StatusSummary 
-          title="Completed" 
-          count={orderStats.completed} 
-          icon={<Check size={20} className="text-[hsl(var(--silai-highlight))]" />} 
-          color="border-[hsl(var(--silai-highlight))]"
-          trend={{ percentage: 8, isPositive: true }}
-          bgClass="from-emerald-500/20 to-emerald-700/20"
-        />
+    <div className="mb-8">
+      <div className="flex items-center justify-between">
+        <div className="flex gap-4 border-b w-full">
+          <div className="px-4 py-2 text-primary font-medium border-b-2 border-primary">
+            Recent Orders
+          </div>
+          <div className="px-4 py-2 text-gray-500">
+            Upcoming Deliveries
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <h3 className="text-lg font-medium mb-2">Recent Orders</h3>
+        <p className="text-gray-500 mb-4">You have 5 orders this week</p>
+        
+        <div className="border rounded-md p-4 mb-2 flex justify-between items-center">
+          <div>
+            <p className="font-medium">Order #1000</p>
+            <p className="text-sm text-gray-500">Customer: John Doe</p>
+          </div>
+          <div className="flex items-center">
+            <span className="text-lg font-medium">₹1200</span>
+            <div className="ml-4 text-gray-500">
+              <Clock size={18} />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

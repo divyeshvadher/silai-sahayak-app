@@ -35,7 +35,7 @@ export const DashboardHeader = () => {
     <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
       <div>
         <h1 className="text-2xl font-bold mb-1">
-          {greeting}, <span className="text-primary">{userName}</span>!
+          {greeting}, <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{userName}</span>!
         </h1>
         <p className="text-gray-400">
           {new Date().toLocaleDateString('en-US', { 
@@ -50,21 +50,21 @@ export const DashboardHeader = () => {
         {/* Language Switcher */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-gray-800 bg-gray-900">
+            <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-gray-700 bg-gray-800/50 hover:bg-gray-700/50">
               <Globe size={18} />
               <span className="sr-only">Switch language</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
             <DropdownMenuItem 
               onClick={() => handleLanguageChange("English")}
-              className={language === "English" ? "bg-gray-800" : ""}
+              className={`${language === "English" ? "bg-gray-700" : ""} hover:bg-gray-700`}
             >
               English
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={() => handleLanguageChange("Gujarati")}
-              className={language === "Gujarati" ? "bg-gray-800" : ""}
+              className={`${language === "Gujarati" ? "bg-gray-700" : ""} hover:bg-gray-700`}
             >
               ગુજરાતી (Gujarati)
             </DropdownMenuItem>
@@ -74,13 +74,13 @@ export const DashboardHeader = () => {
         {/* Notification Bell */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-gray-800 bg-gray-900">
+            <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-gray-700 bg-gray-800/50 hover:bg-gray-700/50">
               <Bell size={18} />
               <span className="sr-only">Notifications</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <div className="p-4 text-center text-sm text-muted-foreground">
+          <DropdownMenuContent align="end" className="w-80 bg-gray-800 border-gray-700">
+            <div className="p-4 text-center text-sm text-gray-400">
               No new notifications
             </div>
           </DropdownMenuContent>
@@ -89,7 +89,7 @@ export const DashboardHeader = () => {
         {/* Profile Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="h-9 w-9 p-0 rounded-full border-gray-800 bg-gray-900">
+            <Button variant="outline" className="h-9 w-9 p-0 rounded-full border-gray-700 bg-gray-800/50 hover:bg-gray-700/50">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || ''} />
                 <AvatarFallback className="bg-primary/20 text-primary">
@@ -98,14 +98,14 @@ export const DashboardHeader = () => {
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
             <Link to="/profile">
-              <DropdownMenuItem>
+              <DropdownMenuItem className="hover:bg-gray-700">
                 My Profile
               </DropdownMenuItem>
             </Link>
             <Link to="/settings">
-              <DropdownMenuItem>
+              <DropdownMenuItem className="hover:bg-gray-700">
                 Settings
               </DropdownMenuItem>
             </Link>
@@ -114,7 +114,7 @@ export const DashboardHeader = () => {
         
         {/* New Order Button */}
         <Link to="/orders/new">
-          <Button className="bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 shadow-md transition-all hover:shadow-lg">
+          <Button className="bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-700 hover:to-cyan-600 shadow-md transition-all hover:shadow-lg btn-glow">
             <Plus size={18} className="mr-1" />
             New Order
           </Button>

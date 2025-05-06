@@ -14,8 +14,8 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
 
-    /* Royal Purple as primary */
-    --primary: 267 75% 60%;
+    /* Vibrant Purple as primary */
+    --primary: 267 85% 65%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 240 3.7% 15.9%;
@@ -24,8 +24,8 @@
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
 
-    /* Electric Blue accent */
-    --accent: 220 98% 61%;
+    /* Bright Cyan accent */
+    --accent: 180 100% 50%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84.2% 60.2%;
@@ -33,17 +33,17 @@
 
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 267 75% 60%;
+    --ring: 267 85% 65%;
 
     --radius: 0.5rem;
     
     /* Dashboard specific colors */
-    --silai-sidebar: 240 10% 3.9%;
-    --silai-main: 240 10% 3.9%;
-    --silai-card: 240 10% 5.9%;
+    --silai-sidebar: 260 15% 10%;
+    --silai-main: 240 15% 6%;
+    --silai-card: 240 15% 9%;
     
-    /* Neon Green for highlights */
-    --silai-highlight: 149 75% 58%;
+    /* Bright Teal for highlights */
+    --silai-highlight: 160 100% 60%;
   }
 }
 
@@ -75,11 +75,23 @@
   
   /* Gradient backgrounds */
   .gradient-purple-blue {
-    @apply bg-gradient-to-r from-purple-600 to-blue-500;
+    @apply bg-gradient-to-r from-purple-600 to-cyan-500;
   }
   
   .gradient-blue-green {
-    @apply bg-gradient-to-r from-blue-500 to-green-400;
+    @apply bg-gradient-to-r from-cyan-500 to-emerald-400;
+  }
+  
+  .gradient-teal-cyan {
+    @apply bg-gradient-to-r from-teal-400 to-cyan-300;
+  }
+  
+  .gradient-purple-pink {
+    @apply bg-gradient-to-r from-purple-500 to-pink-400;
+  }
+
+  .card-glass {
+    @apply backdrop-blur-sm bg-white/5 border border-white/10;
   }
   
   /* Animation utilities */
@@ -105,5 +117,17 @@
   
   .hover-lift:hover {
     @apply transform -translate-y-1 shadow-lg;
+  }
+  
+  .btn-glow {
+    @apply relative overflow-hidden;
+  }
+  
+  .btn-glow::after {
+    @apply content-[''] absolute top-0 left-[-100%] z-[-1] w-[200%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent transform transition-all duration-1000 ease-in-out;
+  }
+  
+  .btn-glow:hover::after {
+    @apply left-[100%];
   }
 }

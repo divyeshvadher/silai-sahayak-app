@@ -35,21 +35,44 @@ const Measurements = () => {
 
         if (error) throw error;
         
-        // Transform the data to match CustomerMeasurement type
-        const formattedData: CustomerMeasurement[] = data?.map(item => ({
-          id: item.id,
-          customer_id: item.order_id || "", // Using order_id as customer_id
-          customer_name: item.name || "", // Using name as customer_name
-          chest: Number(item.value) || 0, // For demonstration - in a real app we would need to filter by measurement type
-          waist: Number(item.value) || 0,
-          hips: Number(item.value) || 0,
-          shoulder: Number(item.value) || 0,
-          sleeve_length: Number(item.value) || 0,
-          inseam: Number(item.value) || 0,
-          updated_at: new Date().toISOString() // Using current date as updated_at isn't available
-        })) || [];
+        // Group measurements by customer
+        const customerMeasurementsMap = new Map();
         
-        setMeasurements(formattedData);
+        data?.forEach(item => {
+          if (!customerMeasurementsMap.has(item.name)) {
+            customerMeasurementsMap.set(item.name, {
+              id: item.id,
+              customer_id: item.order_id || "",
+              customer_name: item.name || "",
+              chest: 0,
+              waist: 0,
+              hips: 0,
+              shoulder: 0,
+              sleeve_length: 0,
+              inseam: 0,
+              updated_at: new Date().toISOString()
+            });
+          }
+          
+          // This is just a placeholder implementation - in a real app, 
+          // you would match measurement types to the correct fields
+          const customerData = customerMeasurementsMap.get(item.name);
+          if (item.name.includes('chest')) {
+            customerData.chest = Number(item.value) || 0;
+          } else if (item.name.includes('waist')) {
+            customerData.waist = Number(item.value) || 0;
+          } else if (item.name.includes('hips')) {
+            customerData.hips = Number(item.value) || 0;
+          } else if (item.name.includes('shoulder')) {
+            customerData.shoulder = Number(item.value) || 0;
+          } else if (item.name.includes('sleeve')) {
+            customerData.sleeve_length = Number(item.value) || 0;
+          } else if (item.name.includes('inseam')) {
+            customerData.inseam = Number(item.value) || 0;
+          }
+        });
+        
+        setMeasurements(Array.from(customerMeasurementsMap.values()));
       } catch (error: any) {
         toast.error(`Error loading measurements: ${error.message}`);
       } finally {

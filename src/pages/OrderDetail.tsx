@@ -31,6 +31,13 @@ type OrderDetail = {
   updated_at: string;
 };
 
+type Measurement = {
+  id: string;
+  name: string;
+  value: string;
+  unit: string;
+};
+
 const OrderDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -40,6 +47,8 @@ const OrderDetail = () => {
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [editedOrder, setEditedOrder] = useState<Partial<OrderDetail>>({});
   const [newStatus, setNewStatus] = useState<"pending" | "in-progress" | "completed" | "delivered">("pending");
+  const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [loadingMeasurements, setLoadingMeasurements] = useState(true);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -71,6 +80,9 @@ const OrderDetail = () => {
           setOrder(orderData);
           setEditedOrder(orderData);
           setNewStatus(orderData.status);
+
+          // Fetch measurements for this order
+          fetchMeasurements(id);
         }
       } catch (error: any) {
         toast.error(`Error loading order details: ${error.message}`);
@@ -81,6 +93,28 @@ const OrderDetail = () => {
     
     fetchOrderDetails();
   }, [id]);
+
+  const fetchMeasurements = async (orderId: string) => {
+    try {
+      setLoadingMeasurements(true);
+      const { data, error } = await supabase
+        .from("measurements")
+        .select("*")
+        .eq("order_id", orderId);
+        
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        setMeasurements(data);
+      }
+    } catch (error: any) {
+      toast.error(`Error loading measurements: ${error.message}`);
+    } finally {
+      setLoadingMeasurements(false);
+    }
+  };
 
   // Format date
   const formatDate = (dateString: string | null) => {
@@ -128,6 +162,26 @@ const OrderDetail = () => {
             
             {/* Garment details */}
             <GarmentDetails order={order} />
+            
+            {/* Customer Measurements */}
+            <div className="silai-card">
+              <h3 className="text-lg font-medium mb-3">Customer Measurements</h3>
+              
+              {loadingMeasurements ? (
+                <p className="text-gray-500">Loading measurements...</p>
+              ) : measurements.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {measurements.map(measurement => (
+                    <div key={measurement.id} className="bg-gray-100 p-3 rounded-md">
+                      <p className="text-sm font-medium">{measurement.name}</p>
+                      <p className="text-lg">{measurement.value} {measurement.unit}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500">No measurements recorded for this customer.</p>
+              )}
+            </div>
             
             {/* Payment details */}
             <PaymentDetails order={order} calculateBalance={calculateBalance} />

@@ -19,7 +19,6 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthRedirect from "./components/AuthRedirect";
 import Inventory from "./pages/Inventory";
-import Measurements from "./pages/Measurements";
 import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient({
@@ -46,7 +45,6 @@ const AppContent = () => {
           <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
           <Route path="/designs" element={<ProtectedRoute><Designs /></ProtectedRoute>} />
           <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
-          <Route path="/measurements" element={<ProtectedRoute><Measurements /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><UserEdit /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />

@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import BusinessStats from "@/components/dashboard/BusinessStats";
 import OrderStats from "@/components/dashboard/OrderStats";
-import TodaysOrders from "@/components/dashboard/TodaysOrders";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -16,7 +15,7 @@ import { cn } from "@/lib/utils";
 const Index = () => {
   const navigate = useNavigate();
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const { todaysOrders, orderStats, customerCount, monthlyRevenue, loading, getDataForDate } = useDashboardData();
+  const { orderStats, customerCount, monthlyRevenue, loading, getDataForDate } = useDashboardData();
 
   const handleDateSelect = (selectedDate: Date | undefined) => {
     setDate(selectedDate);
@@ -64,9 +63,6 @@ const Index = () => {
         
         {/* Business statistics */}
         <BusinessStats customerCount={customerCount} monthlyRevenue={monthlyRevenue} />
-        
-        {/* Today's orders */}
-        <TodaysOrders todaysOrders={todaysOrders} loading={loading} />
         
         {/* Order statistics */}
         <OrderStats orderStats={orderStats} />

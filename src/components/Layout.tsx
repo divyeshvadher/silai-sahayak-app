@@ -1,10 +1,9 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "./ui/button";
 import { 
   LogOut, LayoutDashboard, Users, Package, Settings, 
-  Ruler, User
+  User
 } from "lucide-react";
 import {
   Sidebar,
@@ -36,7 +35,6 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
     { path: "/orders", icon: <Package className="w-5 h-5" />, label: "Orders" },
     { path: "/customers", icon: <Users className="w-5 h-5" />, label: "Customers" },
     { path: "/inventory", icon: <Package className="w-5 h-5" />, label: "Inventory" },
-    { path: "/measurements", icon: <Ruler className="w-5 h-5" />, label: "Measurements" },
     { path: "/settings", icon: <Settings className="w-5 h-5" />, label: "Settings" },
   ];
 

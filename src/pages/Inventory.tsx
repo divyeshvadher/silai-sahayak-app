@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { 
   Table,
@@ -15,64 +14,103 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { InventoryItem } from "@/types/dashboard";
-
-// Mock inventory data - In a real app this would come from your database
-const mockInventory: InventoryItem[] = [
-  { id: 1, name: "Cotton Fabric - Blue", type: "Fabric", quantity: 12, unit: "meters", status: "In Stock" },
-  { id: 2, name: "Silk Fabric - Red", type: "Fabric", quantity: 5, unit: "meters", status: "Low Stock" },
-  { id: 3, name: "Plastic Buttons - Small", type: "Accessory", quantity: 200, unit: "pcs", status: "In Stock" },
-  { id: 4, name: "Metal Buttons - Gold", type: "Accessory", quantity: 50, unit: "pcs", status: "Low Stock" },
-  { id: 5, name: "Nylon Thread - Black", type: "Thread", quantity: 30, unit: "spools", status: "In Stock" },
-  { id: 6, name: "Zippers - 6 inch", type: "Accessory", quantity: 8, unit: "pcs", status: "Low Stock" },
-  { id: 7, name: "Cotton Fabric - White", type: "Fabric", quantity: 20, unit: "meters", status: "In Stock" },
-  { id: 8, name: "Polyester Thread - White", type: "Thread", quantity: 25, unit: "spools", status: "In Stock" },
-];
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { AddInventoryDialog } from "@/components/inventory/AddInventoryDialog";
 
 const Inventory = () => {
-  const [inventory, setInventory] = useState(mockInventory);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [lowStockCount, setLowStockCount] = useState(0);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [stats, setStats] = useState({
+    totalItems: 0,
+    lowStockItems: 0,
+    categories: new Set<string>()
+  });
+
+  const fetchInventory = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("inventory")
+        .select("*")
+        .order("name", { ascending: true });
+
+      if (error) throw error;
+
+      if (data) {
+        const items = data.map(item => ({
+          id: item.id,
+          name: item.name,
+          type: item.type,
+          quantity: item.quantity,
+          unit: item.unit,
+          status: item.quantity <= item.min_quantity ? "Low Stock" : "In Stock"
+        }));
+
+        setInventory(items);
+        
+        // Update stats
+        setStats({
+          totalItems: items.length,
+          lowStockItems: items.filter(item => item.status === "Low Stock").length,
+          categories: new Set(items.map(item => item.type))
+        });
+      }
+    } catch (error: any) {
+      toast.error(`Error loading inventory: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Calculate low stock items
-    const lowStock = inventory.filter(item => item.status === "Low Stock").length;
-    setLowStockCount(lowStock);
+    fetchInventory();
     
-    // In a real app, you would set up a real-time listener here
-    // For example, with Supabase:
-    // const subscription = supabase
-    //   .channel('inventory-changes')
-    //   .on('postgres_changes', { 
-    //     event: '*', 
-    //     schema: 'public', 
-    //     table: 'inventory' 
-    //   }, payload => {
-    //     // Update inventory based on changes
-    //     fetchInventory();
-    //   })
-    //   .subscribe();
-    
-    // return () => {
-    //   subscription.unsubscribe();
-    // };
-  }, [inventory]);
+    // Set up real-time subscription
+    const channel = supabase
+      .channel("public:inventory")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "inventory" },
+        () => {
+          fetchInventory();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const updateItemQuantity = async (id: number, newQuantity: number) => {
+    try {
+      const item = inventory.find(i => i.id === id);
+      if (!item) return;
+
+      const { error } = await supabase
+        .from("inventory")
+        .update({ 
+          quantity: newQuantity,
+          status: newQuantity <= 10 ? "Low Stock" : "In Stock"
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Quantity updated successfully");
+    } catch (error: any) {
+      toast.error(`Failed to update quantity: ${error.message}`);
+    }
+  };
 
   // Filter inventory based on search query
   const filteredInventory = inventory.filter(item => 
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.type.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  // Demo function to update inventory (would connect to backend in real app)
-  const updateItemQuantity = (id: number, newQuantity: number) => {
-    setInventory(inventory.map(item => {
-      if (item.id === id) {
-        const status = newQuantity <= 10 ? "Low Stock" : "In Stock";
-        return { ...item, quantity: newQuantity, status };
-      }
-      return item;
-    }));
-  };
 
   return (
     <Layout title="Inventory Management">
@@ -84,7 +122,9 @@ const Inventory = () => {
               <CardTitle className="text-lg font-medium text-white/90">Total Items</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">{inventory.length}</div>
+              <div className="text-3xl font-bold bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
+                {stats.totalItems}
+              </div>
             </CardContent>
           </Card>
           
@@ -93,7 +133,7 @@ const Inventory = () => {
               <CardTitle className="text-lg font-medium text-white/90">Low Stock Items</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-amber-500">{lowStockCount}</div>
+              <div className="text-3xl font-bold text-amber-500">{stats.lowStockItems}</div>
             </CardContent>
           </Card>
           
@@ -102,7 +142,9 @@ const Inventory = () => {
               <CardTitle className="text-lg font-medium text-white/90">Categories</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-cyan-300/70 bg-clip-text text-transparent">3</div>
+              <div className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-cyan-300/70 bg-clip-text text-transparent">
+                {stats.categories.size}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -118,7 +160,10 @@ const Inventory = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button className="w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-teal-400 hover:from-cyan-600 hover:to-teal-500 shadow-md hover:shadow-lg btn-glow">
+          <Button 
+            className="w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-teal-400 hover:from-cyan-600 hover:to-teal-500 shadow-md hover:shadow-lg btn-glow"
+            onClick={() => setAddDialogOpen(true)}
+          >
             <Plus size={18} className="mr-2" />
             Add New Item
           </Button>
@@ -138,51 +183,71 @@ const Inventory = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredInventory.map((item) => (
-                  <TableRow key={item.id} className="border-gray-800 hover:bg-gray-800/30">
-                    <TableCell className="font-medium text-white/90">{item.name}</TableCell>
-                    <TableCell className="text-gray-300">{item.type}</TableCell>
-                    <TableCell className="text-gray-300">
-                      {item.quantity} {item.unit}
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        className={item.status === "Low Stock" 
-                          ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/50" 
-                          : "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/50"
-                        }
-                      >
-                        {item.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="hover:bg-gray-700 text-gray-300"
-                          onClick={() => updateItemQuantity(item.id, item.quantity - 1)}
-                          disabled={item.quantity <= 0}
-                        >
-                          -
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="hover:bg-gray-700 text-gray-300"
-                          onClick={() => updateItemQuantity(item.id, item.quantity + 1)}
-                        >
-                          +
-                        </Button>
-                      </div>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      <p className="text-gray-500">Loading inventory...</p>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : filteredInventory.length > 0 ? (
+                  filteredInventory.map((item) => (
+                    <TableRow key={item.id} className="border-gray-800 hover:bg-gray-800/30">
+                      <TableCell className="font-medium text-white/90">{item.name}</TableCell>
+                      <TableCell className="text-gray-300">{item.type}</TableCell>
+                      <TableCell className="text-gray-300">
+                        {item.quantity} {item.unit}
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          className={item.status === "Low Stock" 
+                            ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/50" 
+                            : "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/50"
+                          }
+                        >
+                          {item.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="hover:bg-gray-700 text-gray-300"
+                            onClick={() => updateItemQuantity(item.id, item.quantity - 1)}
+                            disabled={item.quantity <= 0}
+                          >
+                            -
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="hover:bg-gray-700 text-gray-300"
+                            onClick={() => updateItemQuantity(item.id, item.quantity + 1)}
+                          >
+                            +
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      <p className="text-gray-500">No items found</p>
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
         </Card>
       </div>
+
+      <AddInventoryDialog 
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        onItemAdded={fetchInventory}
+      />
     </Layout>
   );
 };

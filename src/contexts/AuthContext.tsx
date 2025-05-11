@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -31,31 +30,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const handleAuthError = async (error: any) => {
+    if (error?.message?.includes('Invalid Refresh Token') || 
+        error?.message?.includes('refresh_token_not_found')) {
+      console.error('Refresh token error detected:', error);
+      await signOut();
+      window.location.href = '/auth';
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Use setTimeout to avoid potential deadlocks
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-          }, 0);
-        } else {
-          setProfile(null);
+      async (event, session) => {
+        try {
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            // Use setTimeout to avoid potential deadlocks
+            setTimeout(() => {
+              fetchProfile(session.user.id);
+            }, 0);
+          } else {
+            setProfile(null);
+          }
+        } catch (error) {
+          await handleAuthError(error);
         }
       }
     );
 
     // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+      if (error) {
+        await handleAuthError(error);
+        setLoading(false);
+        return;
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchProfile(session.user.id);
+        await fetchProfile(session.user.id);
       }
       
       setLoading(false);
@@ -77,6 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return data;
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      await handleAuthError(error);
       return null;
     }
   };
@@ -87,21 +106,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
-    const response = await supabase.auth.signInWithPassword({ email, password });
-    return response;
+    try {
+      const response = await supabase.auth.signInWithPassword({ email, password });
+      if (response.error) {
+        throw response.error;
+      }
+      return response;
+    } catch (error) {
+      await handleAuthError(error);
+      return { error };
+    }
   };
 
   const signUp = async (email: string, password: string, options?: any) => {
-    const response = await supabase.auth.signUp({ 
-      email, 
-      password, 
-      options: { data: options } 
-    });
-    return response;
+    try {
+      const response = await supabase.auth.signUp({ 
+        email, 
+        password, 
+        options: { data: options } 
+      });
+      if (response.error) {
+        throw response.error;
+      }
+      return response;
+    } catch (error) {
+      await handleAuthError(error);
+      return { error };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+    } catch (error) {
+      console.error('Error during sign out:', error);
+    }
   };
 
   const value = {

@@ -79,7 +79,7 @@ const Inventory = () => {
         }
       )
       .subscribe();
-
+    
     return () => {
       supabase.removeChannel(channel);
     };
@@ -87,20 +87,22 @@ const Inventory = () => {
 
   const updateItemQuantity = async (id: number, newQuantity: number) => {
     try {
-      const item = inventory.find(i => i.id === id);
-      if (!item) return;
+      if (newQuantity < 0) {
+        toast.error("Quantity cannot be negative");
+        return;
+      }
 
       const { error } = await supabase
         .from("inventory")
         .update({ 
           quantity: newQuantity,
-          status: newQuantity <= 10 ? "Low Stock" : "In Stock"
         })
         .eq("id", id);
 
       if (error) throw error;
 
       toast.success("Quantity updated successfully");
+      // No need to manually fetch - real-time subscription will handle the update
     } catch (error: any) {
       toast.error(`Failed to update quantity: ${error.message}`);
     }

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 interface CustomerCardProps {
   id: string;
   name: string;
-  mobile: string;
+  mobile: React.ReactNode;
   totalOrders: number;
 }
 
@@ -25,7 +25,13 @@ const CustomerCard = ({ id, name, mobile, totalOrders }: CustomerCardProps) => {
                 <h3 className="font-medium text-gray-800">{name}</h3>
                 <div className="flex items-center text-sm text-gray-500">
                   <Phone size={14} className="mr-1" />
-                  {mobile}
+                  <a
+                    href={`tel:${mobile.replace(/\s+/g, '')}`}
+                    className="text-blue-600 hover:underline"
+                    onClick={(e) => e.stopPropagation()} // prevents triggering Link
+                  >
+                    {mobile}
+                  </a>
                 </div>
               </div>
             </div>

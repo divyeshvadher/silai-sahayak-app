@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "../components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Edit } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -16,18 +15,29 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { CustomerMeasurement } from "@/types/dashboard";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 const Measurements = () => {
   const navigate = useNavigate();
   const [measurements, setMeasurements] = useState<CustomerMeasurement[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedMeasurement, setSelectedMeasurement] = useState<CustomerMeasurement | null>(null);
+  const [editedValues, setEditedValues] = useState({
+    chest: 0,
+    waist: 0,
+    hips: 0,
+    shoulder: 0,
+    sleeve_length: 0,
+    inseam: 0
+  });
 
   useEffect(() => {
     const fetchMeasurements = async () => {
       try {
         setLoading(true);
-        // Using the measurements table
         const { data, error } = await supabase
           .from("measurements")
           .select("*")
@@ -54,8 +64,6 @@ const Measurements = () => {
             });
           }
           
-          // This is just a placeholder implementation - in a real app, 
-          // you would match measurement types to the correct fields
           const customerData = customerMeasurementsMap.get(item.name);
           if (item.name.includes('chest')) {
             customerData.chest = Number(item.value) || 0;
@@ -88,8 +96,8 @@ const Measurements = () => {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "measurements" },
-        (payload) => {
-          fetchMeasurements(); // Refresh data on any change
+        () => {
+          fetchMeasurements();
         }
       )
       .subscribe();
@@ -98,6 +106,43 @@ const Measurements = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const handleEdit = (measurement: CustomerMeasurement) => {
+    setSelectedMeasurement(measurement);
+    setEditedValues({
+      chest: measurement.chest,
+      waist: measurement.waist,
+      hips: measurement.hips,
+      shoulder: measurement.shoulder,
+      sleeve_length: measurement.sleeve_length,
+      inseam: measurement.inseam
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedMeasurement) return;
+
+    try {
+      const updates = Object.entries(editedValues).map(([key, value]) => ({
+        order_id: selectedMeasurement.customer_id,
+        name: `${selectedMeasurement.customer_name}_${key}`,
+        value: value.toString(),
+        unit: 'cm'
+      }));
+
+      const { error } = await supabase
+        .from("measurements")
+        .upsert(updates);
+
+      if (error) throw error;
+
+      toast.success("Measurements updated successfully");
+      setEditDialogOpen(false);
+    } catch (error: any) {
+      toast.error(`Failed to update measurements: ${error.message}`);
+    }
+  };
 
   const filteredMeasurements = measurements.filter(
     (measurement) =>
@@ -161,15 +206,12 @@ const Measurements = () => {
                     <TableHead>Shoulder (cm)</TableHead>
                     <TableHead>Sleeve Length (cm)</TableHead>
                     <TableHead>Last Updated</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredMeasurements.map((measurement) => (
-                    <TableRow
-                      key={measurement.id}
-                      className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => navigate(`/measurements/${measurement.id}`)}
-                    >
+                    <TableRow key={measurement.id}>
                       <TableCell className="font-medium">
                         {measurement.customer_name}
                       </TableCell>
@@ -180,6 +222,16 @@ const Measurements = () => {
                       <TableCell>{measurement.sleeve_length}</TableCell>
                       <TableCell>
                         {formatDate(measurement.updated_at)}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(measurement)}
+                        >
+                          <Edit size={16} className="mr-1" />
+                          Edit
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -199,6 +251,71 @@ const Measurements = () => {
           )}
         </div>
       </div>
+
+      {/* Edit Measurements Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Measurements</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Chest (cm)</Label>
+                <Input
+                  type="number"
+                  value={editedValues.chest}
+                  onChange={(e) => setEditedValues(prev => ({ ...prev, chest: Number(e.target.value) }))}
+                />
+              </div>
+              <div>
+                <Label>Waist (cm)</Label>
+                <Input
+                  type="number"
+                  value={editedValues.waist}
+                  onChange={(e) => setEditedValues(prev => ({ ...prev, waist: Number(e.target.value) }))}
+                />
+              </div>
+              <div>
+                <Label>Hips (cm)</Label>
+                <Input
+                  type="number"
+                  value={editedValues.hips}
+                  onChange={(e) => setEditedValues(prev => ({ ...prev, hips: Number(e.target.value) }))}
+                />
+              </div>
+              <div>
+                <Label>Shoulder (cm)</Label>
+                <Input
+                  type="number"
+                  value={editedValues.shoulder}
+                  onChange={(e) => setEditedValues(prev => ({ ...prev, shoulder: Number(e.target.value) }))}
+                />
+              </div>
+              <div>
+                <Label>Sleeve Length (cm)</Label>
+                <Input
+                  type="number"
+                  value={editedValues.sleeve_length}
+                  onChange={(e) => setEditedValues(prev => ({ ...prev, sleeve_length: Number(e.target.value) }))}
+                />
+              </div>
+              <div>
+                <Label>Inseam (cm)</Label>
+                <Input
+                  type="number"
+                  value={editedValues.inseam}
+                  onChange={(e) => setEditedValues(prev => ({ ...prev, inseam: Number(e.target.value) }))}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveEdit}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

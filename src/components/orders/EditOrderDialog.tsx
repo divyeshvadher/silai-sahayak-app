@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,6 +55,13 @@ export const EditOrderDialog = ({
   editedOrder, 
   setEditedOrder
 }: EditOrderDialogProps) => {
+  const [measurements, setMeasurements] = useState([
+    { name: "Chest", value: "", unit: "cm" },
+    { name: "Waist", value: "", unit: "cm" },
+    { name: "Hip", value: "", unit: "cm" },
+    { name: "Length", value: "", unit: "cm" },
+    { name: "Sleeve", value: "", unit: "cm" }
+  ]);
   
   const handleEditOrder = async () => {
     if (!order.id || !editedOrder) return;
@@ -79,8 +85,22 @@ export const EditOrderDialog = ({
         .eq("id", order.id);
         
       if (error) throw error;
+
+      // Update measurements
+      const measurementUpdates = measurements.map(m => ({
+        order_id: order.id,
+        name: m.name,
+        value: m.value,
+        unit: m.unit
+      }));
+
+      const { error: measurementError } = await supabase
+        .from("measurements")
+        .upsert(measurementUpdates);
+
+      if (measurementError) throw measurementError;
       
-      toast.success("Order updated successfully");
+      toast.success("Order and measurements updated successfully");
       setOrder({
         ...order,
         ...editedOrder,
@@ -95,7 +115,6 @@ export const EditOrderDialog = ({
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    // Fix: Don't use functional updates here since we're expecting a direct object
     setEditedOrder({
       ...editedOrder,
       [name]: value
@@ -103,11 +122,16 @@ export const EditOrderDialog = ({
   };
   
   const handleSelectChange = (name: string, value: string) => {
-    // Fix: Don't use functional updates here since we're expecting a direct object
     setEditedOrder({
       ...editedOrder,
       [name]: value
     });
+  };
+
+  const handleMeasurementChange = (index: number, value: string) => {
+    const updatedMeasurements = [...measurements];
+    updatedMeasurements[index].value = value;
+    setMeasurements(updatedMeasurements);
   };
 
   return (
@@ -204,6 +228,22 @@ export const EditOrderDialog = ({
                 onChange={handleInputChange}
               />
             </div>
+          </div>
+
+          {/* Measurements Section */}
+          <div className="space-y-4">
+            <Label>Measurements</Label>
+            {measurements.map((measurement, index) => (
+              <div key={index} className="grid grid-cols-2 gap-4">
+                <Label>{measurement.name}</Label>
+                <Input
+                  type="number"
+                  value={measurement.value}
+                  onChange={(e) => handleMeasurementChange(index, e.target.value)}
+                  placeholder={`Enter ${measurement.name.toLowerCase()}`}
+                />
+              </div>
+            ))}
           </div>
           
           <div>

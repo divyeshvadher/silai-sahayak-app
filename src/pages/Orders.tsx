@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import OrderCard from "../components/OrderCard";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, Filter, Edit } from "lucide-react";
+import { Search, Plus, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -134,10 +134,6 @@ const Orders = () => {
     navigate("/orders/new");
   };
 
-  const handleEditOrder = (orderId: string) => {
-    navigate(`/orders/${orderId}`);
-  };
-
   return (
     <Layout title="Orders">
       <div className="animate-fade-in">
@@ -178,24 +174,14 @@ const Orders = () => {
         ) : filteredOrders.length > 0 ? (
           <div className="space-y-3">
             {filteredOrders.map(order => (
-              <div key={order.id} className="flex items-center gap-2">
-                <div className="flex-1">
-                  <OrderCard
-                    id={order.id}
-                    customerName={order.customer_name}
-                    garmentType={order.garment_type}
-                    dueDate={order.due_date}
-                    status={order.status}
-                  />
-                </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleEditOrder(order.id)}
-                  className="shrink-0"
-                >
-                  <Edit size={16} />
-                </Button>
+              <div key={order.id} className="flex-1">
+                <OrderCard
+                  id={order.id}
+                  customerName={order.customer_name}
+                  garmentType={order.garment_type}
+                  dueDate={order.due_date}
+                  status={order.status}
+                />
               </div>
             ))}
           </div>

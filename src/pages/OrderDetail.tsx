@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
@@ -165,7 +164,16 @@ const OrderDetail = () => {
             
             {/* Customer Measurements */}
             <div className="silai-card">
-              <h3 className="text-lg font-medium mb-3">Customer Measurements</h3>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-medium">Customer Measurements</h3>
+                <Button 
+                  variant="outline"
+                  onClick={() => setEditDialogOpen(true)}
+                  className="text-primary hover:text-primary-foreground"
+                >
+                  Edit Measurements
+                </Button>
+              </div>
               
               {loadingMeasurements ? (
                 <p className="text-gray-500">Loading measurements...</p>

@@ -237,7 +237,7 @@ export const EditOrderDialog = ({
         
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button className="bg-silai-600 hover:bg-silai-700" onClick={handleEditOrder}>
+          <Button className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded" onClick={handleEditOrder}>
             Save Changes
           </Button>
         </DialogFooter>

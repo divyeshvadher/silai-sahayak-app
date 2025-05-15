@@ -166,13 +166,6 @@ const OrderDetail = () => {
             <div className="silai-card">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-lg font-medium">Customer Measurements</h3>
-                <Button 
-                  variant="outline"
-                  onClick={() => setEditDialogOpen(true)}
-                  className="text-primary hover:text-primary-foreground"
-                >
-                  Edit Measurements
-                </Button>
               </div>
               
               {loadingMeasurements ? (
@@ -198,16 +191,16 @@ const OrderDetail = () => {
             <OrderNotes notes={order.notes} />
             
             {/* Actions */}
-            <div className="flex space-x-3 pt-2">
+            <div className="flex gap-3 pt-2">
               <Button 
-                className="bg-silai-600 hover:bg-silai-700 flex-1" 
+                variant="outline"
+                className="flex-1 bg-white hover:bg-gray-100 text-gray-900 border-gray-200"
                 onClick={() => setEditDialogOpen(true)}
               >
                 Edit Order
               </Button>
               <Button 
-                variant="outline" 
-                className="flex-1"
+                className="flex-1 bg-primary text-white hover:bg-primary/90"
                 onClick={() => setStatusDialogOpen(true)}
               >
                 Update Status

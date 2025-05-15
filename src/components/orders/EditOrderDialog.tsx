@@ -1,20 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogFooter
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,25 +47,59 @@ type EditOrderDialogProps = {
   setEditedOrder: (order: Partial<OrderDetailType>) => void;
 };
 
-export const EditOrderDialog = ({ 
-  open, 
-  onOpenChange, 
-  order, 
-  setOrder, 
-  editedOrder, 
+export const EditOrderDialog = ({
+  open,
+  onOpenChange,
+  order,
+  setOrder,
+  editedOrder,
   setEditedOrder
 }: EditOrderDialogProps) => {
-  const [measurements, setMeasurements] = useState([
+  const defaultMeasurements = [
     { name: "Chest", value: "", unit: "cm" },
     { name: "Waist", value: "", unit: "cm" },
     { name: "Hip", value: "", unit: "cm" },
     { name: "Length", value: "", unit: "cm" },
     { name: "Sleeve", value: "", unit: "cm" }
-  ]);
-  
+  ];
+
+  const [measurements, setMeasurements] = useState(defaultMeasurements);
+
+  useEffect(() => {
+    const fetchMeasurements = async () => {
+      if (!order.id) return;
+
+      const { data, error } = await supabase
+        .from("measurements")
+        .select("*")
+        .eq("order_id", order.id);
+
+      if (error) {
+        toast.error("Failed to fetch measurements");
+        return;
+      }
+
+      if (data.length > 0) {
+        const formatted = defaultMeasurements.map((m) => {
+          const found = data.find((d) => d.name === m.name);
+          return found
+            ? { name: found.name, value: found.value, unit: found.unit }
+            : m;
+        });
+        setMeasurements(formatted);
+      } else {
+        setMeasurements(defaultMeasurements);
+      }
+    };
+
+    if (open) {
+      fetchMeasurements();
+    }
+  }, [open, order.id]);
+
   const handleEditOrder = async () => {
     if (!order.id || !editedOrder) return;
-    
+
     try {
       const { error } = await supabase
         .from("orders")
@@ -83,11 +117,11 @@ export const EditOrderDialog = ({
           updated_at: new Date().toISOString()
         })
         .eq("id", order.id);
-        
+
       if (error) throw error;
 
       // Update measurements
-      const measurementUpdates = measurements.map(m => ({
+      const measurementUpdates = measurements.map((m) => ({
         order_id: order.id,
         name: m.name,
         value: m.value,
@@ -96,31 +130,34 @@ export const EditOrderDialog = ({
 
       const { error: measurementError } = await supabase
         .from("measurements")
-        .upsert(measurementUpdates);
+        .upsert(measurementUpdates, { onConflict: ['order_id', 'name'] });
 
       if (measurementError) throw measurementError;
-      
+
       toast.success("Order and measurements updated successfully");
+
       setOrder({
         ...order,
         ...editedOrder,
         updated_at: new Date().toISOString()
       });
-      
+
       onOpenChange(false);
     } catch (error: any) {
       toast.error(`Failed to update order: ${error.message}`);
     }
   };
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setEditedOrder({
       ...editedOrder,
       [name]: value
     });
   };
-  
+
   const handleSelectChange = (name: string, value: string) => {
     setEditedOrder({
       ...editedOrder,
@@ -140,7 +177,7 @@ export const EditOrderDialog = ({
         <DialogHeader>
           <DialogTitle>Edit Order</DialogTitle>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -148,7 +185,7 @@ export const EditOrderDialog = ({
               <Input
                 id="customer_name"
                 name="customer_name"
-                value={editedOrder.customer_name || ''}
+                value={editedOrder.customer_name || ""}
                 onChange={handleInputChange}
               />
             </div>
@@ -157,19 +194,19 @@ export const EditOrderDialog = ({
               <Input
                 id="phone_number"
                 name="phone_number"
-                value={editedOrder.phone_number || ''}
+                value={editedOrder.phone_number || ""}
                 onChange={handleInputChange}
               />
             </div>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="garment_type">Garment Type</Label>
               <Input
                 id="garment_type"
                 name="garment_type"
-                value={editedOrder.garment_type || ''}
+                value={editedOrder.garment_type || ""}
                 onChange={handleInputChange}
               />
             </div>
@@ -178,12 +215,12 @@ export const EditOrderDialog = ({
               <Input
                 id="fabric_type"
                 name="fabric_type"
-                value={editedOrder.fabric_type || ''}
+                value={editedOrder.fabric_type || ""}
                 onChange={handleInputChange}
               />
             </div>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="due_date">Due Date</Label>
@@ -191,7 +228,11 @@ export const EditOrderDialog = ({
                 id="due_date"
                 name="due_date"
                 type="date"
-                value={editedOrder.due_date ? new Date(editedOrder.due_date).toISOString().split('T')[0] : ''}
+                value={
+                  editedOrder.due_date
+                    ? new Date(editedOrder.due_date).toISOString().split("T")[0]
+                    : ""
+                }
                 onChange={handleInputChange}
               />
             </div>
@@ -201,12 +242,16 @@ export const EditOrderDialog = ({
                 id="delivery_date"
                 name="delivery_date"
                 type="date"
-                value={editedOrder.delivery_date ? new Date(editedOrder.delivery_date).toISOString().split('T')[0] : ''}
+                value={
+                  editedOrder.delivery_date
+                    ? new Date(editedOrder.delivery_date).toISOString().split("T")[0]
+                    : ""
+                }
                 onChange={handleInputChange}
               />
             </div>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="price">Price</Label>
@@ -214,7 +259,7 @@ export const EditOrderDialog = ({
                 id="price"
                 name="price"
                 type="number"
-                value={editedOrder.price || ''}
+                value={editedOrder.price || ""}
                 onChange={handleInputChange}
               />
             </div>
@@ -224,7 +269,7 @@ export const EditOrderDialog = ({
                 id="advance_paid"
                 name="advance_paid"
                 type="number"
-                value={editedOrder.advance_paid || ''}
+                value={editedOrder.advance_paid || ""}
                 onChange={handleInputChange}
               />
             </div>
@@ -239,19 +284,23 @@ export const EditOrderDialog = ({
                 <Input
                   type="number"
                   value={measurement.value}
-                  onChange={(e) => handleMeasurementChange(index, e.target.value)}
+                  onChange={(e) =>
+                    handleMeasurementChange(index, e.target.value)
+                  }
                   placeholder={`Enter ${measurement.name.toLowerCase()}`}
                 />
               </div>
             ))}
           </div>
-          
+
           <div>
             <Label htmlFor="priority_level">Priority Level</Label>
-            <Select 
+            <Select
               name="priority_level"
-              value={editedOrder.priority_level || 'normal'}
-              onValueChange={(value) => handleSelectChange('priority_level', value)}
+              value={editedOrder.priority_level || "normal"}
+              onValueChange={(value) =>
+                handleSelectChange("priority_level", value)
+              }
             >
               <SelectTrigger>
                 <SelectValue />
@@ -264,22 +313,27 @@ export const EditOrderDialog = ({
               </SelectContent>
             </Select>
           </div>
-          
+
           <div>
             <Label htmlFor="notes">Notes</Label>
             <Textarea
               id="notes"
               name="notes"
-              value={editedOrder.notes || ''}
+              value={editedOrder.notes || ""}
               onChange={handleInputChange}
               rows={3}
             />
           </div>
         </div>
-        
+
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button className="bg-silai-600 hover:bg-silai-700" onClick={handleEditOrder}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            className="bg-silai-600 hover:bg-silai-700"
+            onClick={handleEditOrder}
+          >
             Save Changes
           </Button>
         </DialogFooter>

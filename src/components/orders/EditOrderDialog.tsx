@@ -6,44 +6,68 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Database } from "@/lib/supabase";
-import { supabase } from "@/lib/utils";
-import { Order } from "./columns";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
-type Measurement = {
-  name: string;
-  value: string;
-  unit: string;
+type OrderDetailType = {
+  id: string;
+  customer_name: string;
+  phone_number: string | null;
+  garment_type: string;
+  fabric_type: string | null;
+  fabric_provided_by: string;
+  due_date: string;
+  delivery_date: string | null;
+  price: number;
+  advance_paid: number | null;
+  status: "pending" | "in-progress" | "completed" | "delivered";
+  notes: string | null;
+  priority_level: string;
+  created_at: string;
+  updated_at: string;
 };
 
-interface EditOrderProps {
+type EditOrderDialogProps = {
   open: boolean;
-  onClose: () => void;
-  order: Order;
-  onUpdate: () => void;
-}
+  onOpenChange: (open: boolean) => void;
+  order: OrderDetailType;
+  setOrder: (order: OrderDetailType) => void;
+  editedOrder: Partial<OrderDetailType>;
+  setEditedOrder: (order: Partial<OrderDetailType>) => void;
+};
 
-const defaultMeasurements: Measurement[] = [
-  { name: "Chest", value: "", unit: "inch" },
-  { name: "Waist", value: "", unit: "inch" },
-  { name: "Hips", value: "", unit: "inch" },
-  { name: "Sleeve Length", value: "", unit: "inch" },
-];
+export const EditOrderDialog = ({
+  open,
+  onOpenChange,
+  order,
+  setOrder,
+  editedOrder,
+  setEditedOrder
+}: EditOrderDialogProps) => {
+  const defaultMeasurements = [
+    { name: "Chest", value: "", unit: "cm" },
+    { name: "Waist", value: "", unit: "cm" },
+    { name: "Hip", value: "", unit: "cm" },
+    { name: "Length", value: "", unit: "cm" },
+    { name: "Sleeve", value: "", unit: "cm" }
+  ];
 
-export function EditOrderDialog({ open, onClose, order, onUpdate }: EditOrderProps) {
-  const [measurements, setMeasurements] = useState<Measurement[]>(defaultMeasurements);
-  const [loading, setLoading] = useState(false);
+  const [measurements, setMeasurements] = useState(defaultMeasurements);
 
   useEffect(() => {
     const fetchMeasurements = async () => {
-      if (!order?.id) return;
+      if (!order.id) return;
 
       const { data, error } = await supabase
         .from("measurements")
@@ -73,34 +97,35 @@ export function EditOrderDialog({ open, onClose, order, onUpdate }: EditOrderPro
     }
   }, [open, order.id]);
 
-  const handleChange = (index: number, value: string) => {
-    const updated = [...measurements];
-    updated[index].value = value;
-    setMeasurements(updated);
-  };
+  const handleEditOrder = async () => {
+    if (!order.id || !editedOrder) return;
 
-  const handleSubmit = async () => {
-    setLoading(true);
     try {
-      const updates = {
-        id: order.id,
-        customer_name: order.customer_name,
-        status: order.status,
-        // add other order fields if needed
-      };
-
-      const { error: orderError } = await supabase
+      const { error } = await supabase
         .from("orders")
-        .update(updates)
+        .update({
+          customer_name: editedOrder.customer_name,
+          phone_number: editedOrder.phone_number,
+          garment_type: editedOrder.garment_type,
+          fabric_type: editedOrder.fabric_type,
+          due_date: editedOrder.due_date,
+          delivery_date: editedOrder.delivery_date,
+          price: editedOrder.price,
+          advance_paid: editedOrder.advance_paid,
+          notes: editedOrder.notes,
+          priority_level: editedOrder.priority_level,
+          updated_at: new Date().toISOString()
+        })
         .eq("id", order.id);
 
-      if (orderError) throw orderError;
+      if (error) throw error;
 
+      // Update measurements
       const measurementUpdates = measurements.map((m) => ({
         order_id: order.id,
         name: m.name,
         value: m.value,
-        unit: m.unit,
+        unit: m.unit
       }));
 
       const { error: measurementError } = await supabase
@@ -109,49 +134,210 @@ export function EditOrderDialog({ open, onClose, order, onUpdate }: EditOrderPro
 
       if (measurementError) throw measurementError;
 
-      toast.success("Order updated successfully");
-      onUpdate();
-      onClose();
-    } catch (err) {
-      toast.error("Failed to update order");
-      console.error(err);
-    } finally {
-      setLoading(false);
+      toast.success("Order and measurements updated successfully");
+
+      setOrder({
+        ...order,
+        ...editedOrder,
+        updated_at: new Date().toISOString()
+      });
+
+      onOpenChange(false);
+    } catch (error: any) {
+      toast.error(`Failed to update order: ${error.message}`);
     }
   };
 
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditedOrder({
+      ...editedOrder,
+      [name]: value
+    });
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setEditedOrder({
+      ...editedOrder,
+      [name]: value
+    });
+  };
+
+  const handleMeasurementChange = (index: number, value: string) => {
+    const updatedMeasurements = [...measurements];
+    updatedMeasurements[index].value = value;
+    setMeasurements(updatedMeasurements);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] flex flex-col max-h-[90vh]">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edit Order</DialogTitle>
         </DialogHeader>
 
-        {/* Scrollable area */}
-        <ScrollArea className="flex-1 overflow-auto px-1">
-          <div className="space-y-4 pb-4">
-            {measurements.map((m, index) => (
-              <div key={m.name} className="grid grid-cols-3 gap-2 items-center">
-                <Label className="col-span-1">{m.name}</Label>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="customer_name">Customer Name</Label>
+              <Input
+                id="customer_name"
+                name="customer_name"
+                value={editedOrder.customer_name || ""}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="phone_number">Phone Number</Label>
+              <Input
+                id="phone_number"
+                name="phone_number"
+                value={editedOrder.phone_number || ""}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="garment_type">Garment Type</Label>
+              <Input
+                id="garment_type"
+                name="garment_type"
+                value={editedOrder.garment_type || ""}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="fabric_type">Fabric Type</Label>
+              <Input
+                id="fabric_type"
+                name="fabric_type"
+                value={editedOrder.fabric_type || ""}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="due_date">Due Date</Label>
+              <Input
+                id="due_date"
+                name="due_date"
+                type="date"
+                value={
+                  editedOrder.due_date
+                    ? new Date(editedOrder.due_date).toISOString().split("T")[0]
+                    : ""
+                }
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="delivery_date">Delivery Date</Label>
+              <Input
+                id="delivery_date"
+                name="delivery_date"
+                type="date"
+                value={
+                  editedOrder.delivery_date
+                    ? new Date(editedOrder.delivery_date).toISOString().split("T")[0]
+                    : ""
+                }
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="price">Price</Label>
+              <Input
+                id="price"
+                name="price"
+                type="number"
+                value={editedOrder.price || ""}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="advance_paid">Advance Paid</Label>
+              <Input
+                id="advance_paid"
+                name="advance_paid"
+                type="number"
+                value={editedOrder.advance_paid || ""}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+
+          {/* Measurements Section */}
+          <div className="space-y-4">
+            <Label>Measurements</Label>
+            {measurements.map((measurement, index) => (
+              <div key={index} className="grid grid-cols-2 gap-4">
+                <Label>{measurement.name}</Label>
                 <Input
-                  className="col-span-1"
-                  value={m.value}
-                  onChange={(e) => handleChange(index, e.target.value)}
-                  placeholder="Enter value"
+                  type="number"
+                  value={measurement.value}
+                  onChange={(e) =>
+                    handleMeasurementChange(index, e.target.value)
+                  }
+                  placeholder={`Enter ${measurement.name.toLowerCase()}`}
                 />
-                <span className="col-span-1 text-sm text-muted-foreground">{m.unit}</span>
               </div>
             ))}
           </div>
-        </ScrollArea>
 
-        {/* Sticky footer */}
-        <div className="mt-4 flex justify-end sticky bottom-0 bg-white border-t pt-4">
-          <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? "Saving..." : "Save Changes"}
-          </Button>
+          <div>
+            <Label htmlFor="priority_level">Priority Level</Label>
+            <Select
+              name="priority_level"
+              value={editedOrder.priority_level || "normal"}
+              onValueChange={(value) =>
+                handleSelectChange("priority_level", value)
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="normal">Normal</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea
+              id="notes"
+              name="notes"
+              value={editedOrder.notes || ""}
+              onChange={handleInputChange}
+              rows={3}
+            />
+          </div>
         </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            className="bg-silai-600 hover:bg-silai-700"
+            onClick={handleEditOrder}
+          >
+            Save Changes
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+};

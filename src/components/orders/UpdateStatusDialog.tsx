@@ -87,7 +87,7 @@ export const UpdateStatusDialog = ({
         
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded" onClick={handleUpdateStatus}>
+          <Button className="border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2" onClick={handleUpdateStatus}>
             Update Status
           </Button>
         </DialogFooter>
